@@ -1,7 +1,13 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+
+interface Exercise {
+  id: string;
+  name: string;
+}
 
 interface SelectMenuProps {
   trigger: React.ReactNode;
@@ -9,9 +15,11 @@ interface SelectMenuProps {
 
 const SelectMenu: React.FC<SelectMenuProps> = ({ trigger }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const [exercises, setExercises] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [exercises, setExercises] = useState<Exercise[]>([]); // Explicitly type exercises
   const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const handleToggle = () => {
     setIsOpen((prev) => !prev);
@@ -20,51 +28,45 @@ const SelectMenu: React.FC<SelectMenuProps> = ({ trigger }) => {
   const fetchExercises = async () => {
     try {
       setError(null);
+
       const { data: session, error: sessionError } = await supabase.auth.getSession();
-  
+
       if (sessionError || !session?.session) {
         setError('You must be logged in to view exercises.');
         return;
       }
-  
-      console.log('User ID:', session.session.user.id); // Log user ID to confirm
-  
+
       const { data, error } = await supabase
         .from('exercises')
-        .select('name')
+        .select('id, name')
         .eq('user_id', session.session.user.id);
-  
+
       if (error) {
-        console.error('Error fetching exercises:', error.message); // Log error if it occurs
         setError(error.message);
         return;
       }
-  
-      console.log('Fetched exercises:', data); // Log fetched data
-      setExercises(data.map((exercise) => exercise.name));
+
+      setExercises(data || []);
     } catch (err) {
-      console.error('Unexpected error fetching exercises:', err); // Handle unexpected errors
       setError('An unexpected error occurred.');
     }
   };
-  
 
-  // Add a new exercise for the authenticated user
   const handleAddExercise = async () => {
     setError(null);
 
     if (!inputValue.trim()) {
-      setError("Exercise name cannot be empty.");
+      setError('Exercise name cannot be empty.');
       return;
     }
 
     const { data: session } = await supabase.auth.getSession();
     if (!session?.session) {
-      setError("You must be logged in to add exercises.");
+      setError('You must be logged in to add exercises.');
       return;
     }
 
-    const { error } = await supabase.from("exercises").insert({
+    const { error } = await supabase.from('exercises').insert({
       user_id: session.session.user.id,
       name: inputValue.trim(),
     });
@@ -72,29 +74,30 @@ const SelectMenu: React.FC<SelectMenuProps> = ({ trigger }) => {
     if (error) {
       setError(error.message);
     } else {
-      setInputValue("");
+      setInputValue('');
       fetchExercises(); // Refresh the list of exercises
     }
   };
 
+  const handleExerciseClick = (exerciseId: string) => {
+    router.push(`/exercises/${exerciseId}`);
+  };
+
   useEffect(() => {
-    if (isOpen) {
       fetchExercises();
-    }
-  }, [isOpen]);
+  }, []);
 
   return (
     <div>
-      {/* Render the trigger button */}
       <div onClick={handleToggle}>{trigger}</div>
 
-      {/* Conditional rendering of the menu */}
       {isOpen && (
         <div className="p-4 bg-white border rounded shadow-md">
-          <h2 className="text-lg font-bold mb-2">Add or Select Exercise</h2>
+          <h2 className="text-lg font-bold mb-4">Add or Select an Exercise</h2>
+
           <input
             type="text"
-            placeholder="Type to search or add"
+            placeholder="Type to add a new exercise"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded mb-2"
@@ -106,12 +109,21 @@ const SelectMenu: React.FC<SelectMenuProps> = ({ trigger }) => {
             Add Exercise
           </button>
           {error && <p className="text-red-500">{error}</p>}
+
           <ul>
-            {exercises.map((exercise, index) => (
-              <li key={index} className="py-2 border-b">
-                {exercise}
-              </li>
-            ))}
+            {exercises.length > 0 ? (
+              exercises.map((exercise) => (
+                <li
+                  key={exercise.id}
+                  className="py-2 border-b cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleExerciseClick(exercise.id)}
+                >
+                  {exercise.name}
+                </li>
+              ))
+            ) : (
+              <li className="py-2 text-gray-500">No exercises found.</li>
+            )}
           </ul>
         </div>
       )}
