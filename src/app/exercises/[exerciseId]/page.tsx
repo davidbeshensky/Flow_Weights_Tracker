@@ -28,8 +28,8 @@ const ExercisePage = () => {
   return (
     <div className="animated-gradient min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="w-fit bg-opacity-10 p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Add Records for: <span className="text-purple-400">{exerciseName}</span>
+        <h1 className="font-extrabold text-4xl mb-6 text-center">
+            <span className="text-purple-900">{exerciseName}</span>
         </h1>
         <RecordForm exerciseId={exerciseId} />
       </div>

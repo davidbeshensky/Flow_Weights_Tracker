@@ -1,26 +1,53 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 interface RecordFormProps {
   exerciseId: string;
+}
+
+interface HistoricalRecord {
+  id: string;
+  created_at: string | null;
+  reps: number[];
+  weights: number[];
+  notes: string | null;
 }
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-
+  const [historicalRecords, setHistoricalRecords] = useState<
+    HistoricalRecord[]
+  >([]);
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const router = useRouter();
+
+  const fetchHistoricalRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("exercise_records")
+        .select("id, created_at, reps, weights, notes")
+        .eq("exercise_id", exerciseId)
+        .order("created_at", { ascending: false })
+        .limit(7);
+
+      if (error) throw error;
+      setHistoricalRecords(data || []);
+    } catch (err) {
+      console.error("error fetching historical records:", err);
+    }
+  };
 
   const handleAddSet = () => {
     if (!reps || !weight) {
-      setError('Both reps and weight are required to add a set.');
+      setError("Both reps and weight are required to add a set.");
       return;
     }
 
@@ -32,14 +59,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   const handleSubmit = async () => {
     if (sets.length === 0) {
-      setError('Please add at least one set before submitting.');
+      setError("Please add at least one set before submitting.");
       return;
     }
 
     const repsArray = sets.map((set) => set.reps);
     const weightsArray = sets.map((set) => set.weight);
 
-    const { error } = await supabase.from('exercise_records').insert({
+    const { error } = await supabase.from("exercise_records").insert({
       exercise_id: exerciseId,
       reps: repsArray,
       weights: weightsArray,
@@ -52,9 +79,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setSets([]);
       setReps(null);
       setWeight(null);
-      setNotes('');
+      setNotes("");
       setError(null);
-      router.push('/'); // Route to main page
+      fetchHistoricalRecords();
+      router.push("/"); // Route to main page
     }
   };
 
@@ -62,27 +90,83 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     setSets([]);
     setReps(null);
     setWeight(null);
-    setNotes('');
+    setNotes("");
     setError(null);
-    router.push('/');
+    router.push("/");
   };
 
+  useEffect(() => {
+    fetchHistoricalRecords();
+  }, []);
+
   return (
-    <div className="animated-gradient flex justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="w-full max-w-lg bg-black bg-opacity-60 p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center">Record Your Progress</h1>
+    <div className="rounded-lg animated-gradient flex justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+      <div className="w-full max-w-sm bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
+        <div className="mt-2">
+          <div
+            onClick={() => setIsHistoryVisible((prev) => !prev)}
+            className="cursor-pointer text-lg font-semibold text-purple-400 hover:text-purple-500 transition-all mb-4 text-center"
+          >
+            {isHistoryVisible
+              ? "Hide Recent Results ▲"
+              : "Show Recent Results ▼"}
+          </div>
+
+          {/* Collapsible Historical Records */}
+          <div
+            className={`transition-all overflow-hidden rounded-lg shadow-lg ${
+              isHistoryVisible ? "max-h-40" : "max-h-0"
+            }`}
+          >
+            <div className="overflow-x-auto overflow-y-auto h-44 flex space-x-4 p-4 bg-gray-900 rounded-lg shadow-md">
+              {historicalRecords.map((record) => {
+                const date = record.created_at
+                  ? new Date(record.created_at).toLocaleDateString(undefined, {
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
+                  : "Unknown Date";
+
+                return (
+                  <div
+                    key={record.id}
+                    className="min-w-[120px] h-fit p-2 bg-gray-800 rounded-md shadow-sm flex-shrink-0"
+                  >
+                    <h5 className="text-sm font-bold text-purple-400 mb-2 text-center">
+                      {date}
+                    </h5>
+                    <div className="space-y-1 text-center">
+                      {record.reps.map((rep, idx) => (
+                        <p key={idx} className="text-xs text-white">
+                          {record.weights[idx]} lbs, {rep} reps
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold mb-6 mt-6 text-center">
+          Record Your Progress
+        </h1>
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         {/* Reps Input */}
         <div className="mb-4">
-          <label htmlFor="reps" className="block text-sm font-medium text-gray-300">
+          <label
+            htmlFor="reps"
+            className="block text-sm font-medium text-gray-300"
+          >
             Reps
           </label>
           <input
             type="number"
             id="reps"
-            value={reps || ''}
+            value={reps || ""}
             onChange={(e) => setReps(Number(e.target.value))}
             className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500"
             placeholder="Enter reps"
@@ -91,13 +175,16 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
         {/* Weight Input */}
         <div className="mb-4">
-          <label htmlFor="weight" className="block text-sm font-medium text-gray-300">
+          <label
+            htmlFor="weight"
+            className="block text-sm font-medium text-gray-300"
+          >
             Weight
           </label>
           <input
             type="number"
             id="weight"
-            value={weight || ''}
+            value={weight || ""}
             onChange={(e) => setWeight(Number(e.target.value))}
             className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500"
             placeholder="Enter weight (lbs)"
@@ -106,7 +193,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
         <button
           onClick={handleAddSet}
-          className="w-full py-3 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all mb-6"
+          className="animated-gradient w-full py-3 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all mb-6"
         >
           Add Set
         </button>
@@ -116,10 +203,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           <h4 className="text-lg font-semibold mb-4">Added Sets:</h4>
           <ul className="space-y-2">
             {sets.map((set, index) => (
-              <li
-                key={index}
-                className="p-3 bg-gray-800 rounded-md shadow-md"
-              >
+              <li key={index} className="p-3 bg-gray-800 rounded-md shadow-md">
                 Set {index + 1}: {set.reps} reps @ {set.weight} lbs
               </li>
             ))}
@@ -128,7 +212,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
         {/* Notes Input */}
         <div className="mb-6">
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-300">
+          <label
+            htmlFor="notes"
+            className="block text-sm font-medium text-gray-300"
+          >
             Notes (Optional)
           </label>
           <textarea
@@ -150,7 +237,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           </button>
           <button
             onClick={handleSubmit}
-            className="py-3 px-6 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all"
+            className="animated-gradient py-3 px-6 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all"
           >
             Submit
           </button>
@@ -184,6 +271,5 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     </div>
   );
 };
-
 
 export default RecordForm;

@@ -85,7 +85,7 @@ const ExerciseManager: React.FC = () => {
 
   return (
     <div className="animated-gradient min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="w-full max-w-2xl px-6 py-4 bg-black bg-opacity-70 shadow-lg rounded-lg">
+      <div className="w-full max-w-2xl px-6 py-4 bg-black bg-opacity-10 shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Manage Your Exercises</h2>
           <SignOutButton /> {/* Using the SignOutButton component */}
@@ -101,7 +101,7 @@ const ExerciseManager: React.FC = () => {
           />
           <button
             onClick={handleAddExercise}
-            className="bg-gradient-to-r from-green-800 to-purple-800 text-white py-3 px-6 rounded-lg shadow-md"
+            className="bg-gradient-to-r from-green-800 to-purple-800 text-white py-3 px-6 rounded-lg shadow-md animated-gradient"
           >
             Add
           </button>

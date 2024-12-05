@@ -1,20 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.twinkle {
-  animation: twinkle 2s infinite ease-in-out;
-}
-
 @keyframes gradient-shimmer {
   0% {
     background-position: 0% 50%;
@@ -31,4 +17,29 @@
   background: linear-gradient(135deg, #6a0dad, #0f9b8e, #000000);
   background-size: 200% 200%; /* Larger size for smoother animation */
   animation: gradient-shimmer 8s infinite ease-in-out; /* Adjust timing for a slower or faster effect */
+}
+
+/* Ripple container styling */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* Ripple styling */
+.ripple-container .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+  background: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+/* Animation for ripple */
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
