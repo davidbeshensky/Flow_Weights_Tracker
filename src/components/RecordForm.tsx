@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 interface RecordFormProps {
   exerciseId: string;
@@ -29,7 +30,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const router = useRouter();
 
-  const fetchHistoricalRecords = async () => {
+  const fetchHistoricalRecords = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("exercise_records")
@@ -38,12 +39,20 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         .order("created_at", { ascending: false })
         .limit(7);
 
-      if (error) throw error;
-      setHistoricalRecords(data || []);
+      if (error || !data) {
+        console.error("Error fetching records or no data returned:", error);
+        setHistoricalRecords([]);
+        return;
+      }
+
+      const validRecords = (data || []).filter(
+        (record) => record.reps && record.weights
+      );
+      setHistoricalRecords(validRecords);
     } catch (err) {
       console.error("error fetching historical records:", err);
     }
-  };
+  }, [exerciseId]);
 
   const handleAddSet = () => {
     if (!reps || !weight) {
@@ -97,7 +106,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   useEffect(() => {
     fetchHistoricalRecords();
-  }, []);
+  }, [fetchHistoricalRecords]);
 
   return (
     <div className="rounded-lg animated-gradient flex justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
@@ -120,12 +129,17 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           >
             <div className="overflow-x-auto overflow-y-auto h-44 flex space-x-4 p-4 bg-gray-900 rounded-lg shadow-md">
               {historicalRecords.map((record) => {
-                const date = record.created_at
-                  ? new Date(record.created_at).toLocaleDateString(undefined, {
-                      month: "2-digit",
-                      day: "2-digit",
-                    })
-                  : "Unknown Date";
+                const date =
+                  record.created_at &&
+                  !isNaN(new Date(record.created_at).getTime())
+                    ? new Date(record.created_at).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "2-digit",
+                          day: "2-digit",
+                        }
+                      )
+                    : "Unknown Date";
 
                 return (
                   <div

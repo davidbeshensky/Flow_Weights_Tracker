@@ -12,7 +12,7 @@ const ExercisePage = () => {
   const searchParams = useSearchParams();
 
   // Extract the exercise ID from the route params
-  const exerciseId = params.exerciseId;
+  const exerciseId = params?.exerciseId;
 
   // Decode the exercise name from the query parameters
   const exerciseName = decodeURIComponent(searchParams.get('name') || 'Exercise');
