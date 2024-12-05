@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.twinkle {
+  animation: twinkle 2s infinite ease-in-out;
+}
+
+@keyframes gradient-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(135deg, #6a0dad, #0f9b8e, #000000);
+  background-size: 200% 200%; /* Larger size for smoother animation */
+  animation: gradient-shimmer 8s infinite ease-in-out; /* Adjust timing for a slower or faster effect */
+}

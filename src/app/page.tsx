@@ -1,10 +1,14 @@
-import ExerciseSelectModal from "../components/AddExerciseModal";
+import AuthenticationWrapper from '@/components/AuthenticationWrapper';
+import ExerciseManager from '@/components/ExerciseManager';
+import SignOutButton from '@/components/SignOutButton';
+import { Sign } from 'crypto';
 
-export default function Home() {
+const Home: React.FC = () => {
   return (
-    <div>
-      some content!
-      <ExerciseSelectModal />
-    </div>
+    <AuthenticationWrapper>
+      <ExerciseManager />
+    </AuthenticationWrapper>
   );
-}
+};
+
+export default Home;
