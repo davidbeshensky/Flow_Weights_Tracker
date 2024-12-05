@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import SignOutButton from './SignOutButton';
+import { useCallback } from 'react';
 
 interface Exercise {
   id: string;
@@ -18,7 +19,7 @@ const ExerciseManager: React.FC = () => {
   const router = useRouter();
 
   // Fetch exercises for the authenticated user
-  const fetchExercises = async () => {
+  const fetchExercises = useCallback(async () => {
     try {
       setError(null);
 
@@ -42,8 +43,9 @@ const ExerciseManager: React.FC = () => {
       setExercises(data || []);
     } catch (err) {
       setError('An unexpected error occurred.');
+      console.error("error:", err)
     }
-  };
+  },[]);
 
   // Add a new exercise for the authenticated user
   const handleAddExercise = async () => {
@@ -81,7 +83,7 @@ const ExerciseManager: React.FC = () => {
   // Fetch exercises on component mount
   useEffect(() => {
     fetchExercises();
-  }, []);
+  }, [fetchExercises]);
 
   return (
     <div className="animated-gradient min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">

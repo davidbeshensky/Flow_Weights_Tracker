@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Object | null } | [];
+export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
 export interface Database {
   public: {
@@ -50,9 +50,5 @@ export interface Database {
         };
       };
     };
-    Views: {};
-    Functions: {};
-    Enums: {};
-    CompositeTypes: {};
   };
 }
