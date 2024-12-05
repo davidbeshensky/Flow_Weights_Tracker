@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useParams, useSearchParams } from 'next/navigation';
-import RecordForm from '@/components/RecordForm';
+import { useParams, useSearchParams } from "next/navigation";
+import RecordForm from "@/components/RecordForm";
 
 interface Params {
   exerciseId: string;
@@ -15,8 +15,13 @@ const ExercisePage = () => {
   const exerciseId = params?.exerciseId;
 
   // Decode the exercise name from the query parameters
-  const exerciseName = decodeURIComponent(searchParams.get('name') || 'Exercise');
-
+  let exerciseName = "Exercise";
+  try {
+    exerciseName = decodeURIComponent(searchParams.get("name") || "Exercise");
+  } catch (err) {
+    console.error("Error decoding exercise name:", err);
+  }
+  
   if (!exerciseId) {
     return (
       <div className="animated-gradient min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
@@ -29,7 +34,7 @@ const ExercisePage = () => {
     <div className="animated-gradient min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="w-fit bg-opacity-10 p-6 rounded-lg shadow-lg">
         <h1 className="font-extrabold text-4xl mb-6 text-center">
-            <span className="text-purple-900">{exerciseName}</span>
+          <span className="text-purple-900">{exerciseName}</span>
         </h1>
         <RecordForm exerciseId={exerciseId} />
       </div>
