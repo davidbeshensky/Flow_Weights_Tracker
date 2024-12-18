@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -19,8 +19,41 @@ const RecordForm: React.FC<RecordFormProps> = ({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [recentSets, setRecentSets] = useState<{ reps: number; weight: number }[]>([]);
 
   const router = useRouter();
+
+  // Fetch the most recent record for the exercise on component mount
+  useEffect(() => {
+    const fetchRecentSets = async () => {
+      const { data, error } = await supabase
+        .from("exercise_records")
+        .select("reps, weights")
+        .eq("exercise_id", exerciseId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Error fetching recent sets:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const { reps, weights } = data[0];
+        const setsData = reps.map((rep: number, index: number) => ({
+          reps: rep,
+          weight: weights[index],
+        }));
+        setRecentSets(setsData);
+        if (setsData.length > 0) {
+          setReps(setsData[0].reps);
+          setWeight(setsData[0].weight);
+        }
+      }
+    };
+
+    fetchRecentSets();
+  }, [exerciseId]);
 
   const handleViewHistory = () => {
     router.push(
@@ -37,8 +70,21 @@ const RecordForm: React.FC<RecordFormProps> = ({
     }
 
     setSets((prev) => [...prev, { reps, weight }]);
-    setReps(null);
-    setWeight(null);
+    const nextSetIndex = sets.length + 1;
+
+    // Autofill the next set with data from `recentSets`
+    if (recentSets.length > 0) {
+      const nextSet =
+        nextSetIndex < recentSets.length
+          ? recentSets[nextSetIndex]
+          : recentSets[recentSets.length - 1]; // Repeat the last set
+      setReps(nextSet.reps);
+      setWeight(nextSet.weight);
+    } else {
+      setReps(null);
+      setWeight(null);
+    }
+
     setError(null);
   };
 
@@ -80,7 +126,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
   };
 
   return (
-    <div className="rounded-lg animated-gradient flex justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+    <div className="rounded-lg animated-gradient flex justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="w-full max-w-sm bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
         <div className="text-center">
           <button

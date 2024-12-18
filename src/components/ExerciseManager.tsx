@@ -121,10 +121,10 @@ const ExerciseManager: React.FC = () => {
     );
 
   return (
-    <div className="animated-gradient min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+    <div className="animated-gradient min-h-screen flex flex-col justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="w-full max-w-2xl px-6 py-4 bg-black bg-opacity-10 shadow-lg rounded-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Manage Your Exercises</h2>
+          <h2 className="text-2xl text-pretty font-bold">Get After It. Record Results.</h2>
           <SignOutButton /> {/* Using the SignOutButton component */}
         </div>
         {/* Input for adding a new exercise/searching */}

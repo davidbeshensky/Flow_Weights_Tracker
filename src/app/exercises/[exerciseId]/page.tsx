@@ -35,9 +35,9 @@
     }
   
     return (
-      <div className="animated-gradient min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-        <div className="w-fit bg-opacity-10 p-6 rounded-lg shadow-lg">
-          <h1 className="font-extrabold text-4xl mb-6 text-center">
+      <div className="animated-gradient min-h-screen flex justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+        <div className="w-fit bg-opacity-10 m-2 rounded-lg shadow-lg">
+          <h1 className="font-extrabold text-4xl mt-4 mb-4 text-center">
             <span className="text-white text-pretty">{exerciseName}</span>
           </h1>
           <RecordForm exerciseId={exerciseId} exerciseName={exerciseName} />
