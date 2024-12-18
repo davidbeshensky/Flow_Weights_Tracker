@@ -14,8 +14,13 @@ export default function SignUpPage() {
     setError(null);
     setSuccess(null);
 
+    const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || // Use this environment variable if defined
+    (typeof window !== "undefined" && window.location.origin) || // Fallback to the current domain
+    "http://localhost:3000"; // Default to localhost for local development
+
     try {
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch(`${baseUrl}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

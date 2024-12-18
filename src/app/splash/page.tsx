@@ -23,7 +23,7 @@ const Splash: React.FC = () => {
           onClick={navigateToLogin}
           className="animated-gradient w-full max-w-xs border-0 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium py-3 px-6 rounded-lg shadow-lg"
         >
-          Sign In
+          Lock In
         </button>
       </div>
     </div>

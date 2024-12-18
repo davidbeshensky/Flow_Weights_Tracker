@@ -1,58 +1,34 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 
 interface RecordFormProps {
   exerciseId: string;
+  exerciseName: string;
 }
 
-interface HistoricalRecord {
-  id: string;
-  created_at: string | null;
-  reps: number[];
-  weights: number[];
-  notes: string | null;
-}
-
-const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
+const RecordForm: React.FC<RecordFormProps> = ({
+  exerciseId,
+  exerciseName,
+}) => {
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [historicalRecords, setHistoricalRecords] = useState<
-    HistoricalRecord[]
-  >([]);
-  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+
   const router = useRouter();
 
-  const fetchHistoricalRecords = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("exercise_records")
-        .select("id, created_at, reps, weights, notes")
-        .eq("exercise_id", exerciseId)
-        .order("created_at", { ascending: false })
-        .limit(7);
-
-      if (error || !data) {
-        console.error("Error fetching records or no data returned:", error);
-        setHistoricalRecords([]);
-        return;
-      }
-
-      const validRecords = (data || []).filter(
-        (record) => record.reps && record.weights
-      );
-      setHistoricalRecords(validRecords);
-    } catch (err) {
-      console.error("error fetching historical records:", err);
-    }
-  }, [exerciseId]);
+  const handleViewHistory = () => {
+    router.push(
+      `/exercises/${exerciseId}/history?name=${encodeURIComponent(
+        exerciseName
+      )}`
+    );
+  };
 
   const handleAddSet = () => {
     if (!reps || !weight) {
@@ -90,7 +66,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setWeight(null);
       setNotes("");
       setError(null);
-      fetchHistoricalRecords();
       router.push("/"); // Route to main page
     }
   };
@@ -104,69 +79,17 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     router.push("/");
   };
 
-  useEffect(() => {
-    fetchHistoricalRecords();
-  }, [fetchHistoricalRecords]);
-
   return (
     <div className="rounded-lg animated-gradient flex justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="w-full max-w-sm bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
-        <div className="mt-2">
-          <div
-            onClick={() => setIsHistoryVisible((prev) => !prev)}
-            className="cursor-pointer text-lg font-semibold text-purple-400 hover:text-purple-500 transition-all mb-4 text-center"
+        <div className="text-center">
+          <button
+            onClick={handleViewHistory}
+            className="py-2 px-4 bg-purple-600 rounded-md hover:bg-purple-500 transition-all text-white"
           >
-            {isHistoryVisible
-              ? "Hide Recent Results ▲"
-              : "Show Recent Results ▼"}
-          </div>
-
-          {/* Collapsible Historical Records */}
-          <div
-            className={`transition-all overflow-hidden rounded-lg shadow-lg ${
-              isHistoryVisible ? "max-h-40" : "max-h-0"
-            }`}
-          >
-            <div className="overflow-x-auto overflow-y-auto h-44 flex space-x-4 p-4 bg-gray-900 rounded-lg shadow-md">
-              {historicalRecords.map((record) => {
-                const date =
-                  record.created_at &&
-                  !isNaN(new Date(record.created_at).getTime())
-                    ? new Date(record.created_at).toLocaleDateString(
-                        undefined,
-                        {
-                          month: "2-digit",
-                          day: "2-digit",
-                        }
-                      )
-                    : "Unknown Date";
-
-                return (
-                  <div
-                    key={record.id}
-                    className="min-w-[120px] h-fit p-2 bg-gray-800 rounded-md shadow-sm flex-shrink-0"
-                  >
-                    <h5 className="text-sm font-bold text-purple-400 mb-2 text-center">
-                      {date}
-                    </h5>
-                    <div className="space-y-1 text-center">
-                      {record.reps.map((rep, idx) => (
-                        <p key={idx} className="text-xs text-white">
-                          {record.weights[idx]} lbs, {rep} reps
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            View History
+          </button>
         </div>
-
-        <h1 className="text-2xl font-bold mb-6 mt-6 text-center">
-          Record Your Progress
-        </h1>
-
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         {/* Reps Input */}
@@ -244,7 +167,13 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         {/* Action Buttons */}
         <div className="flex justify-between">
           <button
-            onClick={() => setShowCancelModal(true)}
+            onClick={() => {
+              if (sets.length > 0) {
+                setShowCancelModal(true); //showing modal only if sets exist
+              } else {
+                handleCancel();
+              }
+            }}
             className="py-3 px-6 bg-gray-600 text-white rounded-md hover:bg-gray-500"
           >
             Cancel
