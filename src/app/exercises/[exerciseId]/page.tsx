@@ -36,7 +36,7 @@
   
     return (
       <div className="min-h-screen flex justify-start animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-whitee">
-        <div className="mx-auto w-fit m-2">
+        <div className="mx-auto min-w-96 m-2">
           <h1 className="font-extrabold text-4xl mt-4 mb-4 text-center">
             <span className="text-white text-pretty">{exerciseName}</span>
           </h1>

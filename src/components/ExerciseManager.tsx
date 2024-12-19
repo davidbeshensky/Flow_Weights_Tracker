@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import SignOutButton from "./SignOutButton";
 import Fuse from "fuse.js";
+import Link from "next/link";
 
 interface Exercise {
   id: string;
@@ -16,8 +16,6 @@ const ExerciseManager: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const router = useRouter();
 
   // Fetch exercises for the authenticated user
   const fetchExercises = useCallback(async () => {
@@ -101,13 +99,6 @@ const ExerciseManager: React.FC = () => {
     }
   };
 
-  // Navigate to the record creation page for the clicked exercise
-  const handleExerciseClick = (exerciseId: string, exerciseName: string) => {
-    router.push(
-      `/exercises/${exerciseId}?name=${encodeURIComponent(exerciseName)}`
-    );
-  };
-
   // Fetch exercises on component mount
   useEffect(() => {
     fetchExercises();
@@ -120,15 +111,22 @@ const ExerciseManager: React.FC = () => {
         exercise.name.toLowerCase() === inputValue.trim().toLowerCase()
     );
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent the page from reloading
+    handleAddExercise();
+  };
+
   return (
     <div className="pt-6 animated-gradient min-h-screen flex flex-col justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="mx-auto w-full max-w-2xl px-6 py-4 bg-black bg-opacity-10 shadow-lg rounded-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl text-pretty font-bold">Get After It. Record Results.</h2>
-          <SignOutButton /> {/* Using the SignOutButton component */}
+          <h2 className="text-2xl text-pretty font-bold">
+            Get After It. Record Results.
+          </h2>
+          <SignOutButton />
         </div>
         {/* Input for adding a new exercise/searching */}
-        <div className="flex items-center gap-4 mb-6">
+        <form className="flex items-center gap-4 mb-6" onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Search or add a new exercise"
@@ -137,7 +135,7 @@ const ExerciseManager: React.FC = () => {
             className="flex-1 p-3 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <button
-            onClick={handleAddExercise}
+            type="submit"
             disabled={!isAddButtonHighlighted}
             className={`py-3 px-6 rounded-lg shadow-md ${
               isAddButtonHighlighted
@@ -147,28 +145,30 @@ const ExerciseManager: React.FC = () => {
           >
             Add
           </button>
-        </div>
+        </form>
 
         {error && <p className="text-red-500 text-sm mb-6">{error}</p>}
 
         {/* List of existing exercises */}
-        <ul className="space-y-3">
+        <div className="space-y-3">
           {filteredExercises.length > 0 ? (
             filteredExercises.map((exercise) => (
-              <li
+              <Link
                 key={exercise.id}
-                className="p-4 bg-gray-800 rounded-lg hover:bg-purple-700 cursor-pointer"
-                onClick={() => handleExerciseClick(exercise.id, exercise.name)}
+                href={`/exercises/${exercise.id}?name=${encodeURIComponent(
+                  exercise.name
+                )}`}
+                className="block p-4 bg-gray-800 rounded-lg hover:bg-purple-700"
               >
                 {exercise.name}
-              </li>
+              </Link>
             ))
           ) : (
-            <li className="text-center text-gray-400">
+            <div className="text-center text-gray-400">
               No exercises found. Start by adding one!
-            </li>
+            </div>
           )}
-        </ul>
+        </div>
       </div>
     </div>
   );

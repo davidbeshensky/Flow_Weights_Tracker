@@ -57,10 +57,10 @@ const ExerciseHistory: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+      <h1 className="text-2xl font-bold text-center mt-4">
+        {exerciseName} - History
+      </h1>
       <div className="w-11/12 max-w-4xl p-6 mt-4 bg-black bg-opacity-50 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center">
-          {exerciseName} - History
-        </h1>
         <div className="w-11/12">
           {/* Victory Scatter Plot */}
           <VictoryChart
@@ -121,7 +121,7 @@ const ExerciseHistory: React.FC = () => {
         Back to Record Form
       </button>
       {/* Scrollable Records List */}
-      <div className="mt-4 mx-4 max-h-96 w-11/12 overflow-y-scroll bg-gray-800 p-4 rounded-lg shadow-lg">
+      <div className="mt-4 mx-4 max-w-4xl max-h-96 w-11/12 overflow-y-scroll bg-gray-800 p-4 rounded-lg shadow-lg">
         <h2 className="text-xl font-bold mb-4">Individual Records</h2>
         <ul className="space-y-4">
           {records

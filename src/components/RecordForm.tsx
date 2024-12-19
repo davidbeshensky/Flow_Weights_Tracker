@@ -19,7 +19,9 @@ const RecordForm: React.FC<RecordFormProps> = ({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [recentSets, setRecentSets] = useState<{ reps: number; weight: number }[]>([]);
+  const [recentSets, setRecentSets] = useState<
+    { reps: number; weight: number }[]
+  >([]);
 
   const router = useRouter();
 
@@ -126,8 +128,8 @@ const RecordForm: React.FC<RecordFormProps> = ({
   };
 
   return (
-    <div className="mx-auto h-fit flex justify-center animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="w-full max-w-sm bg-black bg-opacity-30 p-6 m-6 rounded-lg shadow-lg">
+    <div className="p-4 rounded-lg animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+      <div className="bg-black bg-opacity-30 rounded-lg shadow-lg p-4">
         <div className="text-center">
           <button
             onClick={handleViewHistory}
@@ -147,7 +149,9 @@ const RecordForm: React.FC<RecordFormProps> = ({
             Reps
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             id="reps"
             value={reps || ""}
             onChange={(e) => setReps(Number(e.target.value))}
@@ -165,7 +169,9 @@ const RecordForm: React.FC<RecordFormProps> = ({
             Weight
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             id="weight"
             value={weight || ""}
             onChange={(e) => setWeight(Number(e.target.value))}
@@ -205,7 +211,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500"
+            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 resize-none"
             placeholder="Add any notes for this workout"
           />
         </div>
