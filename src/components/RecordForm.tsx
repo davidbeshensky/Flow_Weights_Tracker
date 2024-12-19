@@ -126,8 +126,8 @@ const RecordForm: React.FC<RecordFormProps> = ({
   };
 
   return (
-    <div className="rounded-lg animated-gradient flex justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="w-full max-w-sm bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
+    <div className="mx-auto h-fit flex justify-center animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
+      <div className="w-full max-w-sm bg-black bg-opacity-30 p-6 m-6 rounded-lg shadow-lg">
         <div className="text-center">
           <button
             onClick={handleViewHistory}
