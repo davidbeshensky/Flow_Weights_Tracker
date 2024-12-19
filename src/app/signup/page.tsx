@@ -36,11 +36,16 @@ export default function SignUpPage() {
         "Sign-up successful! Please check your email to activate your account."
       );
       setTimeout(() => router.push("/login"), 3000); // Redirect to login page after success
-    } catch (err: any) {
-      console.error("Sign-up error:", err.message);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Sign-up error:", err.message);
+        setError(err.message || "An unexpected error occurred. Please try again.");
+      } else {
+        console.error("Unknown error:", err);
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
-  };
+  }
 
   return (
     <div className="animated-gradient relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
