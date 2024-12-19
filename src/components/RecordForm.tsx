@@ -3,16 +3,19 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-
 interface RecordFormProps {
   exerciseId: string;
   exerciseName: string;
+  onUpdateName: (newName: string) => void;
 }
 
 const RecordForm: React.FC<RecordFormProps> = ({
   exerciseId,
   exerciseName,
+  onUpdateName,
 }) => {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState(exerciseName);
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
@@ -56,6 +59,20 @@ const RecordForm: React.FC<RecordFormProps> = ({
 
     fetchRecentSets();
   }, [exerciseId]);
+
+  const handleEditExerciseName = () => {
+    if (!newName.trim()) {
+      setError("Exercise name cannot be empty.");
+      return;
+    }
+    onUpdateName(newName); // Call parent's callback to update the name
+    setIsEditingName(false);
+  };
+
+  const handleEditCancel = () => {
+    setNewName(exerciseName); // Reset to the current name
+    setIsEditingName(false);
+  };
 
   const handleViewHistory = () => {
     router.push(
@@ -130,6 +147,51 @@ const RecordForm: React.FC<RecordFormProps> = ({
   return (
     <div className="p-4 rounded-lg animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
       <div className="bg-black bg-opacity-30 rounded-lg shadow-lg p-4">
+        {/* Editable Exercise Name */}
+        <div className="flex items-center gap-2 mb-4">
+          {isEditingName ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault(); // Prevent default form submission
+                handleEditExerciseName();
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="p-2 w-60 bg-gray-800 text-white text-pretty rounded-md focus:ring-2 focus:ring-purple-500"
+                placeholder="Edit exercise name"
+              />
+              <button
+                type="button"
+                onClick={handleEditCancel}
+                className="py-2 px-2 bg-gray-600 text-white rounded-md hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <>
+              <div className="w-full flex flex-inline justify-center">
+                <span className="text-2xl font-semibold">
+                  {exerciseName}
+                </span>
+                <div
+                  className=" px-2 text-2xl"
+                  onClick={() => {
+                    setIsEditingName(true);
+                    setNewName(exerciseName);
+                  }}
+                >
+                  ✎
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         <div className="text-center">
           <button
             onClick={handleViewHistory}
@@ -138,6 +200,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
             View History
           </button>
         </div>
+
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         {/* Reps Input */}
@@ -155,7 +218,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
             id="reps"
             value={reps || ""}
             onChange={(e) => setReps(Number(e.target.value))}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500"
+            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 appearance-none"
             placeholder="Enter reps"
           />
         </div>
@@ -175,7 +238,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
             id="weight"
             value={weight || ""}
             onChange={(e) => setWeight(Number(e.target.value))}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500"
+            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 appearance-none"
             placeholder="Enter weight (lbs)"
           />
         </div>
@@ -221,7 +284,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
           <button
             onClick={() => {
               if (sets.length > 0) {
-                setShowCancelModal(true); //showing modal only if sets exist
+                setShowCancelModal(true);
               } else {
                 handleCancel();
               }
