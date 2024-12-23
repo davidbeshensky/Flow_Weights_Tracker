@@ -156,7 +156,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const handleViewHistory = () => {
     router.push(
       `/exercises/${exerciseId}/history?name=${encodeURIComponent(
-        exerciseName
+        exerciseName || "default exercise"
       )}`
     );
   };
