@@ -14,7 +14,7 @@ const AuthenticationWrapper: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsAuthenticated(!!session?.session);
 
       if (!session?.session) {
-        router.push('/login'); // Redirect to login page if unauthenticated
+        router.push('/splash'); // Redirect to login page if unauthenticated
       }
     };
 
