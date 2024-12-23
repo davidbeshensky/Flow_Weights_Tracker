@@ -52,7 +52,7 @@ const ExerciseManager: React.FC = () => {
     setInputValue(query);
 
     if (!query.trim()) {
-      setFilteredExercises(exercises); //shows all if input is
+      setFilteredExercises(exercises); // Shows all exercises if input is empty
       return;
     }
 
@@ -117,14 +117,15 @@ const ExerciseManager: React.FC = () => {
   };
 
   return (
-    <div className="pt-6 animated-gradient min-h-screen flex flex-col justify-start bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="mx-auto w-full max-w-2xl px-6 py-4 bg-black bg-opacity-10 shadow-lg rounded-lg">
+    <div className="min-h-screen flex flex-col justify-start bg-black/95 backdrop-blur-md  text-white px-6">
+      <div className="mx-auto w-full max-w-2xl p-2 rounded-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl text-pretty font-bold">
+          <h2 className="text-2xl font-bold text-white">
             Get After It. Record Results.
           </h2>
           <SignOutButton />
         </div>
+
         {/* Input for adding a new exercise/searching */}
         <form className="flex items-center gap-4 mb-6" onSubmit={handleSubmit}>
           <input
@@ -132,14 +133,14 @@ const ExerciseManager: React.FC = () => {
             placeholder="Search or add a new exercise"
             value={inputValue}
             onChange={(e) => handleSearch(e.target.value)}
-            className="flex-1 p-3 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 p-3 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
           <button
             type="submit"
             disabled={!isAddButtonHighlighted}
-            className={`py-3 px-6 rounded-lg shadow-md ${
+            className={`py-3 px-6 rounded-md shadow-md transition duration-300 ${
               isAddButtonHighlighted
-                ? "bg-gradient-to-r from-green-800 to-purple-800 text-white"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
                 : "bg-gray-600 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -158,7 +159,7 @@ const ExerciseManager: React.FC = () => {
                 href={`/exercises/${exercise.id}?name=${encodeURIComponent(
                   exercise.name
                 )}`}
-                className="block p-4 bg-gray-800 rounded-lg hover:bg-purple-700"
+                className="block p-4 bg-gray-800 rounded-md hover:bg-blue-700 transition duration-300"
               >
                 {exercise.name}
               </Link>

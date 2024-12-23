@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Track your gym progress, get better every session",
   icons: {
     icon: "/favicon.ico",
-    apple: "/pngs/apple-icon.png",
+    apple: "/apple-icon.png",
     shortcut: "/favicon.ico",
     other: [
       {

@@ -3,19 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import EditIcon from "@mui/icons-material/Edit";
+
 interface RecordFormProps {
   exerciseId: string;
-  exerciseName: string;
-  onUpdateName: (newName: string) => void;
 }
 
-const RecordForm: React.FC<RecordFormProps> = ({
-  exerciseId,
-  exerciseName,
-  onUpdateName,
-}) => {
+const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
+  const [exerciseName, setExerciseName] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [newName, setNewName] = useState(exerciseName);
+  const [newName, setNewName] = useState("");
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
@@ -28,59 +25,60 @@ const RecordForm: React.FC<RecordFormProps> = ({
 
   const router = useRouter();
 
-  // Fetch the most recent record for the exercise on component mount
+  // Fetch exercise name and the most recent record for the exercise on component mount
   useEffect(() => {
-    const fetchRecentSets = async () => {
-      const { data, error } = await supabase
-        .from("exercise_records")
-        .select("reps, weights")
-        .eq("exercise_id", exerciseId)
-        .order("created_at", { ascending: false })
-        .limit(1);
+    const fetchExerciseData = async () => {
+      try {
+        const { data: exerciseData, error: exerciseError } = await supabase
+          .from("exercises")
+          .select("name")
+          .eq("id", exerciseId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching recent sets:", error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        const { reps, weights } = data[0];
-        const setsData = reps.map((rep: number, index: number) => ({
-          reps: rep,
-          weight: weights[index],
-        }));
-        setRecentSets(setsData);
-        if (setsData.length > 0) {
-          setReps(setsData[0].reps);
-          setWeight(setsData[0].weight);
+        if (exerciseError) {
+          console.error("Error fetching exercise name:", exerciseError);
+          setError("Failed to load exercise data.");
+          return;
         }
+
+        if (exerciseData) {
+          setExerciseName(exerciseData.name);
+          setNewName(exerciseData.name); // Initialize the new name state
+        }
+
+        const { data: recentData, error: recentError } = await supabase
+          .from("exercise_records")
+          .select("reps, weights")
+          .eq("exercise_id", exerciseId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (recentError) {
+          console.error("Error fetching recent sets:", recentError);
+          return;
+        }
+
+        if (recentData && recentData.length > 0) {
+          const { reps, weights } = recentData[0];
+          const setsData = reps.map((rep: number, index: number) => ({
+            reps: rep,
+            weight: weights[index],
+          }));
+          setRecentSets(setsData);
+
+          if (setsData.length > 0) {
+            setReps(setsData[0].reps);
+            setWeight(setsData[0].weight);
+          }
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching data:", err);
+        setError("An unexpected error occurred.");
       }
     };
 
-    fetchRecentSets();
+    fetchExerciseData();
   }, [exerciseId]);
-
-  const handleEditExerciseName = () => {
-    if (!newName.trim()) {
-      setError("Exercise name cannot be empty.");
-      return;
-    }
-    onUpdateName(newName); // Call parent's callback to update the name
-    setIsEditingName(false);
-  };
-
-  const handleEditCancel = () => {
-    setNewName(exerciseName); // Reset to the current name
-    setIsEditingName(false);
-  };
-
-  const handleViewHistory = () => {
-    router.push(
-      `/exercises/${exerciseId}/history?name=${encodeURIComponent(
-        exerciseName
-      )}`
-    );
-  };
 
   const handleAddSet = () => {
     if (!reps || !weight) {
@@ -91,7 +89,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
     setSets((prev) => [...prev, { reps, weight }]);
     const nextSetIndex = sets.length + 1;
 
-    // Autofill the next set with data from `recentSets`
+    // Autofill the next set with data from recentSets
     if (recentSets.length > 0) {
       const nextSet =
         nextSetIndex < recentSets.length
@@ -135,7 +133,50 @@ const RecordForm: React.FC<RecordFormProps> = ({
     }
   };
 
+  const handleEditName = async () => {
+    if (!newName.trim()) {
+      setError("Exercise name cannot be empty.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("exercises")
+      .update({ name: newName.trim() })
+      .eq("id", exerciseId);
+
+    if (error) {
+      setError("Failed to update exercise name.");
+    } else {
+      setExerciseName(newName.trim());
+      setIsEditingName(false);
+      setError(null);
+    }
+  };
+
+  const handleViewHistory = () => {
+    router.push(
+      `/exercises/${exerciseId}/history?name=${encodeURIComponent(
+        exerciseName
+      )}`
+    );
+  };
+
   const handleCancel = () => {
+    if (sets.length > 0) {
+      setShowCancelModal(true);
+    } else {
+      // If no sets are recorded, directly cancel without confirmation
+      setSets([]);
+      setReps(null);
+      setWeight(null);
+      setNotes("");
+      setError(null);
+      router.push("/");
+    }
+  };
+
+  const confirmCancel = () => {
+    setShowCancelModal(false);
     setSets([]);
     setReps(null);
     setWeight(null);
@@ -145,161 +186,157 @@ const RecordForm: React.FC<RecordFormProps> = ({
   };
 
   return (
-    <div className="p-4 rounded-lg animated-gradient bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="bg-black bg-opacity-30 rounded-lg shadow-lg p-4">
-        {/* Editable Exercise Name */}
-        <div className="flex items-center gap-2 mb-4">
-          {isEditingName ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault(); // Prevent default form submission
-                handleEditExerciseName();
-              }}
-              className="flex items-center gap-2"
+    <div className="p-6 bg-black/95 text-white rounded-lg max-w-3xl mx-auto shadow-lg">
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-600 text-white rounded-md flex justify-between items-center">
+          <p className="text-sm font-medium">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="text-white bg-transparent rounded-full w-6 h-6 flex items-center justify-center"
+          >
+            ✖
+          </button>
+        </div>
+      )}
+      {/* Editable Exercise Name */}
+      <div className="flex items-center justify-between mb-6">
+        {isEditingName ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="p-2 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600"
+            />
+            <button
+              onClick={handleEditName}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
             >
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="p-2 w-60 bg-gray-800 text-white text-pretty rounded-md focus:ring-2 focus:ring-purple-500"
-                placeholder="Edit exercise name"
-              />
-              <button
-                type="button"
-                onClick={handleEditCancel}
-                className="py-2 px-2 bg-gray-600 text-white rounded-md hover:bg-gray-500"
-              >
-                Cancel
-              </button>
-            </form>
-          ) : (
-            <>
-              <div className="w-full flex flex-inline justify-center">
-                <span className="text-2xl font-semibold">
-                  {exerciseName}
-                </span>
-                <div
-                  className=" px-2 text-2xl"
-                  onClick={() => {
-                    setIsEditingName(true);
-                    setNewName(exerciseName);
-                  }}
-                >
-                  ✎
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditingName(false)}
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-500"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold">{newName}</h1>
+            <button
+              onClick={() => setIsEditingName(true)}
+              className="p-2 ml-2 bg-transparent text-white hover:bg-gray-800 rounded-md"
+            >
+              <EditIcon fontSize="medium" />
+            </button>
+          </>
+        )}
+      </div>
 
-        <div className="text-center">
-          <button
-            onClick={handleViewHistory}
-            className="py-2 px-4 bg-purple-600 rounded-md hover:bg-purple-500 transition-all text-white"
-          >
-            View History
-          </button>
-        </div>
-
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-
-        {/* Reps Input */}
-        <div className="mb-4">
-          <label
-            htmlFor="reps"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Reps
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            id="reps"
-            value={reps || ""}
-            onChange={(e) => setReps(Number(e.target.value))}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 appearance-none"
-            placeholder="Enter reps"
-          />
-        </div>
-
-        {/* Weight Input */}
-        <div className="mb-4">
-          <label
-            htmlFor="weight"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Weight
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            id="weight"
-            value={weight || ""}
-            onChange={(e) => setWeight(Number(e.target.value))}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 appearance-none"
-            placeholder="Enter weight (lbs)"
-          />
-        </div>
-
+      {/* View History Button */}
+      <div className="flex flex-inline">
         <button
-          onClick={handleAddSet}
-          className="animated-gradient w-full py-3 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all mb-6"
+          onClick={handleViewHistory}
+          className="w-full py-3 mr-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
         >
-          Add Set
+          Past Results
         </button>
+        <button className="w-full py-3 ml-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
+          Add Information
+        </button>
+      </div>
+      {/* Reps Input */}
+      <div className="mb-4">
+        <label
+          htmlFor="reps"
+          className="block text-sm font-medium text-gray-300"
+        >
+          Reps
+        </label>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          id="reps"
+          value={reps || ""}
+          onChange={(e) => setReps(Number(e.target.value))}
+          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none"
+          placeholder="Enter reps"
+        />
+      </div>
 
-        {/* Added Sets */}
-        <div className="mb-6">
-          <h4 className="text-lg font-semibold mb-4">Added Sets:</h4>
-          <ul className="space-y-2">
-            {sets.map((set, index) => (
-              <li key={index} className="p-3 bg-gray-800 rounded-md shadow-md">
-                Set {index + 1}: {set.reps} reps @ {set.weight} lbs
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Weight Input */}
+      <div className="mb-4">
+        <label
+          htmlFor="weight"
+          className="block text-sm font-medium text-gray-300"
+        >
+          Weight
+        </label>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          id="weight"
+          value={weight || ""}
+          onChange={(e) => setWeight(Number(e.target.value))}
+          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none"
+          placeholder="Enter weight (lbs)"
+        />
+      </div>
 
-        {/* Notes Input */}
-        <div className="mb-6">
-          <label
-            htmlFor="notes"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Notes (Optional)
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-purple-500 resize-none"
-            placeholder="Add any notes for this workout"
-          />
-        </div>
+      <button
+        onClick={handleAddSet}
+        className="w-full py-3 bg-blue-600 text-white font-medium rounded-md shadow-md hover:bg-blue-700 transition-all mb-6"
+      >
+        Add Set
+      </button>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between">
-          <button
-            onClick={() => {
-              if (sets.length > 0) {
-                setShowCancelModal(true);
-              } else {
-                handleCancel();
-              }
-            }}
-            className="py-3 px-6 bg-gray-600 text-white rounded-md hover:bg-gray-500"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="animated-gradient py-3 px-6 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-md shadow-md hover:from-green-700 hover:to-purple-700 transition-all"
-          >
-            Submit
-          </button>
-        </div>
+      {/* Added Sets */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold mb-4">Added Sets:</h4>
+        <ul className="space-y-2">
+          {sets.map((set, index) => (
+            <li key={index} className="p-3 bg-gray-800 rounded-md shadow-md">
+              Set {index + 1}: {set.reps} reps @ {set.weight} lbs
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Notes Input */}
+      <div className="mb-6">
+        <label
+          htmlFor="notes"
+          className="block text-sm font-medium text-gray-300"
+        >
+          Notes (Optional)
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 resize-none"
+          placeholder="Add any notes for this workout"
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        <button
+          onClick={handleCancel}
+          className="py-3 px-6 bg-gray-600 text-white rounded-md hover:bg-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Submit
+        </button>
       </div>
 
       {/* Cancel Confirmation Modal */}
@@ -317,7 +354,7 @@ const RecordForm: React.FC<RecordFormProps> = ({
                 Go Back
               </button>
               <button
-                onClick={handleCancel}
+                onClick={confirmCancel}
                 className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-500"
               >
                 Confirm Cancel

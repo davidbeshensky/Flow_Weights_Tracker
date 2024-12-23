@@ -43,14 +43,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="animated-gradient relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-green-700 to-black text-white">
-      <div className="relative z-10 w-full max-w-md px-6 text-center">
-        <h1 className="text-4xl font-extrabold mb-4 tracking-wide">Welcome Back</h1>
-        <p className="text-lg mb-6">Sign in to continue your journey.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
+      <div className="relative z-10 w-full max-w-md">
+        <h1 className="text-4xl font-extrabold text-center mb-4">
+          Welcome Back
+        </h1>
+        <p className="text-lg text-gray-400 text-center mb-6">
+          Sign in to continue your journey.
+        </p>
 
-        <div className="w-full flex flex-col gap-4 shadow-lg bg-black bg-opacity-25 p-6 rounded-lg">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
+        <div className="w-full flex flex-col gap-4 bg-gray-900 p-6 rounded-lg border border-gray-800">
+          {/* Email Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-sm font-medium text-gray-300">
               Email
             </label>
             <input
@@ -59,13 +64,14 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-4 rounded-md bg-gray-900 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full p-4 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
               placeholder="Enter your email"
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-sm font-medium">
+          {/* Password Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="password" className="text-sm font-medium text-gray-300">
               Password
             </label>
             <input
@@ -74,24 +80,28 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-4 rounded-md bg-gray-900 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full p-4 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
               placeholder="Enter your password"
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {/* Error Message */}
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
+          {/* Sign In Button */}
           <button
             onClick={handleLogin}
-            className="w-full py-4 bg-gradient-to-r from-green-800 to-purple-800 text-white font-medium rounded-lg shadow-md animated-gradient"
+            className="w-full py-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300"
           >
             Sign In
           </button>
-          <p className="text-sm text-gray-300 mt-4">
+
+          {/* Sign Up Redirect */}
+          <p className="text-sm text-gray-400 text-center mt-4">
             Don&apos;t have an account?{' '}
             <button
               onClick={() => router.push('/signup')}
-              className="text-purple-400 hover:underline"
+              className="text-blue-400 hover:underline"
             >
               Sign up here
             </button>
