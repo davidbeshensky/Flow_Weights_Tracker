@@ -4,13 +4,15 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import EditIcon from "@mui/icons-material/Edit";
+import ExerciseHistory from "./ExerciseHistory";
+import { AnimatePresence } from "framer-motion";
 
 interface RecordFormProps {
   exerciseId: string;
 }
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
-  const [exerciseName, setExerciseName] = useState<string | null>(null);
+  const [exerciseName, setExerciseName] = useState<string>("Exercise");
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [reps, setReps] = useState<number | null>(null);
@@ -22,6 +24,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [recentSets, setRecentSets] = useState<
     { reps: number; weight: number }[]
   >([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const handleOpenHistory = () => setShowHistory(true);
+  const handleCloseHistory = () => setShowHistory(false);
 
   const router = useRouter();
 
@@ -153,14 +159,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     }
   };
 
-  const handleViewHistory = () => {
-    router.push(
-      `/exercises/${exerciseId}/history?name=${encodeURIComponent(
-        exerciseName || "default exercise"
-      )}`
-    );
-  };
-
   const handleCancel = () => {
     if (sets.length > 0) {
       setShowCancelModal(true);
@@ -199,6 +197,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           </button>
         </div>
       )}
+
       {/* Editable Exercise Name */}
       <div className="flex items-center justify-between mb-6">
         {isEditingName ? (
@@ -237,12 +236,24 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
       {/* View History Button */}
       <div className="flex flex-inline">
-        <button
-          onClick={handleViewHistory}
-          className="w-full py-3 mr-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
-        >
-          Past Results
-        </button>
+      <button
+        onClick={handleOpenHistory}
+        className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
+      >
+        View History
+      </button>
+
+      <AnimatePresence>
+        {showHistory && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+            <ExerciseHistory
+              exerciseId={exerciseId}
+              exerciseName={exerciseName}
+              onClose={handleCloseHistory}
+            />
+          </div>
+        )}
+      </AnimatePresence>
         <button className="w-full py-3 ml-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
           Add Information
         </button>
