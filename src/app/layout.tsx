@@ -31,6 +31,10 @@ export default function RootLayout({
         {/* Apple-specific meta tags */}
         <meta name="apple-mobile-web-app-title" content="Locked-In" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
