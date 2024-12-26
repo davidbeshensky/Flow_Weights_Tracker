@@ -11,9 +11,16 @@ interface RecordFormProps {
   exerciseId: string;
 }
 
+interface ExerciseRecord {
+  reps: number[]; // Array of repetitions for each set
+  weights: number[]; // Array of weights for each set
+  created_at: string; // Timestamp when the record was created
+}
+
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [exerciseName, setExerciseName] = useState<string>("Exercise");
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingSets, setIsEditingSets] = useState(false);
   const [newName, setNewName] = useState("");
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
@@ -25,6 +32,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     { reps: number; weight: number }[]
   >([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [recentSetsDate, setRecentSetsDate] = useState<string | null>(null);
 
   const handleOpenHistory = () => setShowHistory(true);
   const handleCloseHistory = () => setShowHistory(false);
@@ -54,7 +62,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
         const { data: recentData, error: recentError } = await supabase
           .from("exercise_records")
-          .select("reps, weights")
+          .select("reps, weights, created_at")
           .eq("exercise_id", exerciseId)
           .order("created_at", { ascending: false })
           .limit(1);
@@ -65,12 +73,13 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         }
 
         if (recentData && recentData.length > 0) {
-          const { reps, weights } = recentData[0];
+          const { reps, weights, created_at } = recentData[0] as ExerciseRecord;
           const setsData = reps.map((rep: number, index: number) => ({
             reps: rep,
             weight: weights[index],
           }));
           setRecentSets(setsData);
+          setRecentSetsDate(created_at);
 
           if (setsData.length > 0) {
             setReps(setsData[0].reps);
@@ -93,6 +102,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     }
 
     setSets((prev) => [...prev, { reps, weight }]);
+
     const nextSetIndex = sets.length + 1;
 
     // Autofill the next set with data from recentSets
@@ -104,8 +114,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setReps(nextSet.reps);
       setWeight(nextSet.weight);
     } else {
-      setReps(null);
-      setWeight(null);
+      //default behavior if no sbsequent past records exist.
+      setReps(reps);
+      setWeight(weight);
     }
 
     setError(null);
@@ -183,6 +194,20 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     router.push("/");
   };
 
+  const handleEditSets = (
+    index: number,
+    field: "reps" | "weight",
+    value: number
+  ) => {
+    setSets((prevSets) =>
+      prevSets.map((set, i) => (i === index ? { ...set, [field]: value } : set))
+    );
+  };
+
+  const handleDeleteSet = (index: number) => {
+    setSets((prevSets) => prevSets.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="p-6 bg-black/95 text-white rounded-lg max-w-3xl mx-auto shadow-lg">
       {/* Error Message */}
@@ -197,7 +222,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           </button>
         </div>
       )}
-
       {/* Editable Exercise Name */}
       <div className="flex items-center justify-between mb-6">
         {isEditingName ? (
@@ -233,27 +257,26 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           </>
         )}
       </div>
-
       {/* View History Button */}
       <div className="flex flex-inline">
-      <button
-        onClick={handleOpenHistory}
-        className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
-      >
-        View History
-      </button>
+        <button
+          onClick={handleOpenHistory}
+          className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
+        >
+          View History
+        </button>
 
-      <AnimatePresence>
-        {showHistory && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-            <ExerciseHistory
-              exerciseId={exerciseId}
-              exerciseName={exerciseName}
-              onClose={handleCloseHistory}
-            />
-          </div>
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {showHistory && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+              <ExerciseHistory
+                exerciseId={exerciseId}
+                exerciseName={exerciseName}
+                onClose={handleCloseHistory}
+              />
+            </div>
+          )}
+        </AnimatePresence>
         <button className="w-full py-3 ml-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
           Add Information
         </button>
@@ -277,7 +300,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           placeholder="Enter reps"
         />
       </div>
-
       {/* Weight Input */}
       <div className="mb-4">
         <label
@@ -297,28 +319,111 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           placeholder="Enter weight (lbs)"
         />
       </div>
-
       <button
         onClick={handleAddSet}
         className="w-full py-3 bg-blue-600 text-white font-medium rounded-md shadow-md hover:bg-blue-700 transition-all mb-6"
       >
         Add Set
       </button>
-
-      {/* Added Sets */}
-      <div className="mb-6">
-        <h4 className="text-lg font-semibold mb-4">Added Sets:</h4>
-        <ul className="space-y-2">
-          {sets.map((set, index) => (
-            <li key={index} className="p-3 bg-gray-800 rounded-md shadow-md">
-              Set {index + 1}: {set.reps} reps @ {set.weight} lbs
-            </li>
-          ))}
-        </ul>
+      <div className="flex">
+        {/* Previous results */}
+        {recentSets.length > 0 && (
+          <div className="w-1/2 mr-1">
+            <h4 className="text-lg font-semibold mb-2">
+              Results:{" "}
+              {recentSetsDate
+                ? new Date(recentSetsDate).toLocaleDateString("en-US", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    year: "2-digit", // This will show the year as 2 digits (e.g., 24)
+                  })
+                : "Unknown Date"}
+            </h4>
+            <ul className="space-y-2">
+              {recentSets.map((set, index) => (
+                <li
+                  key={index}
+                  className="p-3 bg-gray-800 rounded-md shadow-md"
+                >
+                  S-{index + 1}: ({set.reps}, {set.weight})
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Added Sets */}
+        {sets.length > 0 && (
+          <div className="ml-1 w-1/2">
+            <div className="flex justify-between mb-2">
+              <h4 className="text-lg font-semibold">Today&apos;s Liftage</h4>
+              <button
+                onClick={() => setIsEditingSets(!isEditingSets)}
+                className=" ml-2 bg-transparent text-white hover:bg-gray-800 rounded-md"
+              >
+                {isEditingSets ? "✅" : <EditIcon fontSize="medium" />}
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {sets.map((set, index) => (
+                <li
+                  key={index}
+                  className="p-3 bg-gray-800 rounded-md shadow-md flex items-center justify-between"
+                >
+                  {isEditingSets ? (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <label className="text-sm text-gray-300">Reps:</label>
+                        <input
+                          type="number"
+                          value={set.reps}
+                          onChange={(e) =>
+                            handleEditSets(
+                              index,
+                              "reps",
+                              Number(e.target.value)
+                            )
+                          }
+                          className="mr-1 text-center w-8 bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 ml-1">
+                        <label className="text-sm text-gray-300">Lbs:</label>
+                        <input
+                          type="number"
+                          value={set.weight}
+                          onChange={(e) =>
+                            handleEditSets(
+                              index,
+                              "weight",
+                              Number(e.target.value)
+                            )
+                          }
+                          className="w-8 text-center bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      S-{index + 1}: ({set.reps}, {set.weight})
+                    </>
+                  )}
+                  {/* Delete Button */}
+                  {!isEditingSets && (
+                    <button
+                      onClick={() => handleDeleteSet(index)}
+                      className="bg-transparent rounded-md hover:text-red-500 focus:ring-2 focus:ring-red-500"
+                    >
+                      ✖
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
-
       {/* Notes Input */}
-      <div className="mb-6">
+      <div className="mt-6 mb-6">
         <label
           htmlFor="notes"
           className="block text-sm font-medium text-gray-300"
@@ -333,7 +438,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           placeholder="Add any notes for this workout"
         />
       </div>
-
       {/* Action Buttons */}
       <div className="flex justify-between">
         <button
@@ -349,7 +453,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           Submit
         </button>
       </div>
-
       {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center">
