@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter(); // Initialize router
 
@@ -26,7 +26,8 @@ export default function LoginPage() {
     }
 
     // Confirm session exists
-    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    const { data: session, error: sessionError } =
+      await supabase.auth.getSession();
     if (sessionError) {
       console.error("Error fetching session:", sessionError.message);
       setError("Unexpected error. Please try again.");
@@ -35,7 +36,7 @@ export default function LoginPage() {
 
     if (session?.session?.user) {
       console.log("User logged in successfully, routing to the main page");
-      router.push('/'); // Navigate to the main page
+      router.push("/"); // Navigate to the main page
     } else {
       console.warn("Session not found after login");
       setError("Login failed. Please try again.");
@@ -55,7 +56,10 @@ export default function LoginPage() {
         <div className="w-full flex flex-col gap-4 bg-gray-900 p-6 rounded-lg border border-gray-800">
           {/* Email Input */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-gray-300">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-300"
+            >
               Email
             </label>
             <input
@@ -71,7 +75,10 @@ export default function LoginPage() {
 
           {/* Password Input */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="password" className="text-sm font-medium text-gray-300">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-300"
+            >
               Password
             </label>
             <input
@@ -84,6 +91,16 @@ export default function LoginPage() {
               placeholder="Enter your password"
             />
           </div>
+
+          {/* Forgot Password Link */}
+          <p className="text-sm text-gray-400 text-right">
+            <button
+              onClick={() => router.push("/change-password")}
+              className="text-blue-400 hover:underline"
+            >
+              Forgot your password?
+            </button>
+          </p>
 
           {/* Error Message */}
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -98,9 +115,9 @@ export default function LoginPage() {
 
           {/* Sign Up Redirect */}
           <p className="text-sm text-gray-400 text-center mt-4">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <button
-              onClick={() => router.push('/signup')}
+              onClick={() => router.push("/signup")}
               className="text-blue-400 hover:underline"
             >
               Sign up here

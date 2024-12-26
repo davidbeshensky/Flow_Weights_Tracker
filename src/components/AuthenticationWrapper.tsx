@@ -1,10 +1,12 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
-const AuthenticationWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AuthenticationWrapper: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
 
@@ -14,7 +16,7 @@ const AuthenticationWrapper: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsAuthenticated(!!session?.session);
 
       if (!session?.session) {
-        router.push('/splash'); // Redirect to login page if unauthenticated
+        router.push("/splash"); // Redirect to splash page if unauthenticated
       }
     };
 

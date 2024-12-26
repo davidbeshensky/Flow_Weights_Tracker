@@ -16,6 +16,7 @@ interface HistoricalRecord {
   created_at: string;
   reps: number[];
   weights: number[];
+  notes?: string;
 }
 
 interface ExerciseHistoryProps {
@@ -35,7 +36,7 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
     const fetchData = async () => {
       const { data, error } = await supabase
         .from("exercise_records")
-        .select("id, created_at, reps, weights")
+        .select("id, created_at, reps, weights, notes")
         .eq("exercise_id", exerciseId)
         .order("created_at", { ascending: true });
 
@@ -161,23 +162,32 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
 
       <div className="w-full bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold mb-4">Past Results</h2>
-        <div className="max-h-96 overflow-y-auto space-y-4">
+        <div className="space-y-4">
           {records
             .slice()
             .reverse()
             .map((record) => (
               <div
                 key={record.id}
-                className="p-4 bg-gray-700 rounded-lg shadow"
+                className="p-4 bg-gray-700 rounded-lg shadow flex justify-between space-x-4"
               >
-                <p className="text-blue-400 font-semibold mb-2">
-                  {new Date(record.created_at).toLocaleDateString()}
-                </p>
-                {record.weights.map((weight, index) => (
-                  <p key={index} className="text-sm text-gray-300">
-                    Set {index + 1}: {weight} lbs for {record.reps[index]} reps
+                {/* Left Section: Sets and Reps */}
+                <div>
+                  <p className="text-blue-400 font-semibold mb-2">
+                    {new Date(record.created_at).toLocaleDateString()}
                   </p>
-                ))}
+                  {record.weights.map((weight, index) => (
+                    <p key={index} className="text-sm text-gray-300">
+                      Set {index + 1}: {weight} lbs for {record.reps[index]}{" "}
+                      reps
+                    </p>
+                  ))}
+                </div>
+
+                {/* Right Section: Notes */}
+                <div className="flex-1 text-sm text-gray-400 italic bg-gray-600 p-3 rounded">
+                  {record.notes ? record.notes : "No notes available"}
+                </div>
               </div>
             ))}
         </div>

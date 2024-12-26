@@ -374,7 +374,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                       <div className="flex items-center gap-1">
                         <label className="text-sm text-gray-300">Reps:</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={set.reps}
                           onChange={(e) =>
                             handleEditSets(
@@ -389,7 +391,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                       <div className="flex items-center gap-1 ml-1">
                         <label className="text-sm text-gray-300">Lbs:</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={set.weight}
                           onChange={(e) =>
                             handleEditSets(
@@ -450,7 +454,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           onClick={handleSubmit}
           className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          Submit
+          Lock-In
         </button>
       </div>
       {/* Cancel Confirmation Modal */}

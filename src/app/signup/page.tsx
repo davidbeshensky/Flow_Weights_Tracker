@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -10,46 +11,56 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  // Handles traditional sign-up
   const handleSignUp = async () => {
     setError(null);
     setSuccess(null);
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      (typeof window !== "undefined" && window.location.origin) ||
-      "http://localhost:3000";
-
     try {
-      const response = await fetch(`${baseUrl}/api/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Attempt to sign up the user
+      const response = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
-      if (!response.ok) {
-        const { msg } = await response.json();
-        throw new Error(msg || "Failed to sign up.");
-      }
+      // Log the response for debugging purposes
+      console.log("Sign-up response:", JSON.stringify(response, null, 2));
 
-      setSuccess(
-        "Sign-up successful! Please check your email to activate your account."
-      );
-      setTimeout(() => router.push("/login"), 3000); // Redirect to login page after success
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("Sign-up error:", err.message);
-        setError(err.message || "An unexpected error occurred. Please try again.");
-      } else {
-        console.error("Unknown error:", err);
-        setError("An unexpected error occurred. Please try again.");
+      // Handle the sign-up response
+      if (response.data && response.data.user) {
+        if (
+          response.data.user.identities &&
+          response.data.user.identities.length > 0
+        ) {
+          console.log("Sign-up successful!");
+          setSuccess(
+            "Sign-up successful! Please check your email to activate your account."
+          );
+          setTimeout(() => router.push("/login"), 3000); // Redirect to login
+        } else {
+          console.log("Email address is already taken.");
+          setError(
+            "This email is already registered. If you forgot your password, reset it using the link below."
+          );
+        }
+      } else if (response.error) {
+        throw new Error(response.error.message);
       }
+    } catch (err: unknown) {
+      console.error("Sign-up error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again."
+      );
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
-      <div className="relative z-10 w-full max-w-md">
+      <div className="bg-gray-900 p-8 rounded-lg relative z-10 w-full max-w-md">
         <h1 className="text-4xl font-extrabold text-center mb-4">
           Create Your Account
         </h1>
@@ -60,7 +71,10 @@ export default function SignUpPage() {
         <div className="flex flex-col gap-4">
           {/* Email Field */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-gray-300">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-300"
+            >
               Email
             </label>
             <input
@@ -94,7 +108,22 @@ export default function SignUpPage() {
           </div>
 
           {/* Error or Success Message */}
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {error && (
+            <div className="text-red-500 text-sm mt-2">
+              <p>{error}</p>
+              {error ===
+                "This email is already registered. If you forgot your password, reset it using the link below." && (
+                <p className="mt-2">
+                  <button
+                    onClick={() => router.push("/change-password")}
+                    className="text-blue-400 hover:underline"
+                  >
+                    Reset your password here.
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
           {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
 
           {/* Sign Up Button */}

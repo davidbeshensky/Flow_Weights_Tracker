@@ -38,7 +38,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/icon.png" sizes="32x32" />
         <link rel="icon" type="image/png" href="/icon.png" sizes="96x96" />
       </head>
-      <body>{children}</body>
+      <body className="main-container">{children}</body>
     </html>
   );
 }
