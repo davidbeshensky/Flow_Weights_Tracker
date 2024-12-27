@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import EditIcon from "@mui/icons-material/Edit";
-
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 interface EditExerciseNameProps {
   exerciseId: string;
   currentName: string;
@@ -30,11 +31,12 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
     }
 
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("exercises")
         .update({ name: newName.trim() })
         .eq("id", exerciseId);
 
+      console.log("Supabase update response:", { data, error });
       if (error) {
         setError("Failed to update exercise name.");
       } else {
@@ -72,13 +74,13 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
             onClick={handleEditName}
             className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700"
           >
-            Save
+            <CheckIcon />
           </button>
           <button
             onClick={() => setIsEditing(false)}
             className="bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-500"
           >
-            Cancel
+            <CloseIcon />
           </button>
         </div>
       ) : (

@@ -7,6 +7,8 @@ import ExerciseHistory from "./ExerciseHistory";
 import { AnimatePresence } from "framer-motion";
 import EditExerciseName from "./EditExerciseName";
 import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
+
 interface RecordFormProps {
   exerciseId: string;
 }
@@ -232,7 +234,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
             </div>
           )}
         </AnimatePresence>
-        <button className="w-full py-3 ml-1 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
+        <button className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
           Add Information
         </button>
       </div>
@@ -315,7 +317,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                 onClick={() => setIsEditingSets(!isEditingSets)}
                 className=" ml-2 bg-transparent text-white hover:bg-gray-800 rounded-md"
               >
-                {isEditingSets ? "✅" : <EditIcon fontSize="medium" />}
+                {isEditingSets ? <CheckIcon /> : <EditIcon fontSize="medium" />}
               </button>
             </div>
             <ul className="space-y-2">
