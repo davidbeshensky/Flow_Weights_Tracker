@@ -3,10 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import EditIcon from "@mui/icons-material/Edit";
 import ExerciseHistory from "./ExerciseHistory";
 import { AnimatePresence } from "framer-motion";
-
+import EditExerciseName from "./EditExerciseName";
+import EditIcon from "@mui/icons-material/Edit";
 interface RecordFormProps {
   exerciseId: string;
 }
@@ -18,10 +18,9 @@ interface ExerciseRecord {
 }
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
-  const [exerciseName, setExerciseName] = useState<string>("Exercise");
-  const [isEditingName, setIsEditingName] = useState(false);
+  const [exerciseName, setExerciseName] = useState<string>("");
   const [isEditingSets, setIsEditingSets] = useState(false);
-  const [newName, setNewName] = useState("");
+  const [isEditingName, setIsEditingName] = useState<boolean>(false); // Tracks if EditExerciseName is active
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
@@ -57,7 +56,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
         if (exerciseData) {
           setExerciseName(exerciseData.name);
-          setNewName(exerciseData.name); // Initialize the new name state
         }
 
         const { data: recentData, error: recentError } = await supabase
@@ -150,24 +148,13 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     }
   };
 
-  const handleEditName = async () => {
-    if (!newName.trim()) {
-      setError("Exercise name cannot be empty.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("exercises")
-      .update({ name: newName.trim() })
-      .eq("id", exerciseId);
-
-    if (error) {
-      setError("Failed to update exercise name.");
-    } else {
-      setExerciseName(newName.trim());
-      setIsEditingName(false);
-      setError(null);
-    }
+  const resetState = () => {
+    setSets([]);
+    setReps(null);
+    setWeight(null);
+    setNotes("");
+    setError(null);
+    router.push("/");
   };
 
   const handleCancel = () => {
@@ -175,23 +162,13 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setShowCancelModal(true);
     } else {
       // If no sets are recorded, directly cancel without confirmation
-      setSets([]);
-      setReps(null);
-      setWeight(null);
-      setNotes("");
-      setError(null);
-      router.push("/");
+      resetState();
     }
   };
 
   const confirmCancel = () => {
     setShowCancelModal(false);
-    setSets([]);
-    setReps(null);
-    setWeight(null);
-    setNotes("");
-    setError(null);
-    router.push("/");
+    resetState();
   };
 
   const handleEditSets = (
@@ -224,38 +201,16 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       )}
       {/* Editable Exercise Name */}
       <div className="flex items-center justify-between mb-6">
-        {isEditingName ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="p-2 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600"
-            />
-            <button
-              onClick={handleEditName}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditingName(false)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-500"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-3xl font-bold">{newName}</h1>
-            <button
-              onClick={() => setIsEditingName(true)}
-              className="p-2 ml-2 bg-transparent text-white hover:bg-gray-800 rounded-md"
-            >
-              <EditIcon fontSize="medium" />
-            </button>
-          </>
-        )}
+        {!isEditingName ? (
+          <h1 className="text-3xl font-bold">{exerciseName || "Loading..."}</h1>
+        ) : null}
+        <EditExerciseName
+          exerciseId={exerciseId}
+          currentName={exerciseName}
+          onUpdateName={(newName) => setExerciseName(newName)}
+          onEditStateChange={(isEditing) => setIsEditingName(isEditing)} // Update isEditingName state
+          buttonType="icon"
+        />
       </div>
       {/* View History Button */}
       <div className="flex flex-inline">

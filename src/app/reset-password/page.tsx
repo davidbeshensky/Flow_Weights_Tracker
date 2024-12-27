@@ -23,18 +23,28 @@ export default function ResetPasswordPage() {
         throw new Error(error.message);
       }
 
-      setSuccess('Password updated successfully! Redirecting to sign-in...');
+      setSuccess("Password updated successfully! Redirecting to sign-in...");
       setTimeout(() => {
-        router.push('/login'); // Redirect to the login page
+        router.push("/login"); // Redirect to the login page
       }, 1500);
     } catch (err: unknown) {
-      setError((err as Error)?.message || 'An error occurred. Please try again.');
+      setError(
+        (err as Error)?.message || "An error occurred. Please try again."
+      );
     }
   };
 
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
+      {/* Header Section */}
+      <header className="absolute top-0 w-full py-4 px-8 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <button
+          onClick={() => router.push("/splash")}
+          className="text-xl font-semibold"
+        >
+          Lockedingains
+        </button>
+      </header>
       <div className="relative z-10 w-full max-w-md">
         <h1 className="text-4xl font-extrabold text-center mb-4">
           Set a New Password

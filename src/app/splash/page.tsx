@@ -18,7 +18,7 @@ const Splash: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
       {/* Header Section */}
       <header className="absolute top-0 w-full py-4 px-8 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-gray-800">
-        <h1 className="text-xl font-semibold">Lockingains</h1>
+        <h1 className="text-xl font-semibold">Lockedingains</h1>
         <div>
           <button
             className="mr-4 text-sm text-gray-400 hover:text-white transition"
@@ -51,7 +51,7 @@ const Splash: React.FC = () => {
 
       {/* Footer Section */}
       <footer className="absolute bottom-0 w-full py-4 text-center text-sm text-gray-600 border-t border-gray-800">
-        © 2024 Lockingains. All rights reserved.
+        © 2024 Lockedingains. All rights reserved.
       </footer>
     </div>
   );

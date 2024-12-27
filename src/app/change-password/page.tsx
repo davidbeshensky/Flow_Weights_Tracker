@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function ChangePassword() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handlePasswordReset = async () => {
     setError(null);
@@ -17,19 +19,30 @@ export default function ChangePassword() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`, // Custom reset page
       });
-      
+
       if (error) {
         throw new Error(error.message);
       }
 
       setSuccess("Password reset email sent! Please check your inbox.");
     } catch (err: unknown) {
-      setError((err as Error)?.message || "An error occurred. Please try again.");
+      setError(
+        (err as Error)?.message || "An error occurred. Please try again."
+      );
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
+      {/* Header Section */}
+      <header className="absolute top-0 w-full py-4 px-8 flex justify-between items-center bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <button
+          onClick={() => router.push("/splash")}
+          className="text-xl font-semibold"
+        >
+          Lockedingains
+        </button>
+      </header>
       <div className="relative z-10 w-full max-w-md">
         <h1 className="text-4xl font-extrabold text-center mb-4">
           Reset Your Password
