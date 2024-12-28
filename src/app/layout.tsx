@@ -6,13 +6,18 @@ export const metadata: Metadata = {
   applicationName: "Locked-In Gains",
   description: "Track your gym progress, get better every session",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
-    shortcut: "/favicon.ico",
+    icon: [
+      { rel: "icon", url: "/favicon.ico", sizes: "any" }, // Default favicon
+      { rel: "icon", url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { rel: "icon", url: "/icon-96x96.png", sizes: "96x96", type: "image/png" },
+      { rel: "apple-touch-icon", url: "/apple-icon.png", sizes: "180x180" }, // Apple icon
+    ],
+    apple: "/apple-icon.png", // Shortcut for Apple icon
+    shortcut: "/favicon.ico", // Shortcut for the default favicon
     other: [
       {
         rel: "manifest",
-        url: "/manifest.json",
+        url: "/manifest.json", // PWA manifest
       },
     ],
   },
@@ -35,12 +40,18 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
-        <link rel="manifest" href="/manifest.json" />
+
+        {/* Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/icon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/icon-96x96.png" sizes="96x96" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
+
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+
+        {/* Optional SVG Favicon (if supported) */}
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="icon" type="image/png" href="/icon.png" sizes="32x32" />
-        <link rel="icon" type="image/png" href="/icon.png" sizes="96x96" />
       </head>
       <body className="main-container">{children}</body>
     </html>
