@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Locked-In",
+  title: "Locked-In-Gains",
   applicationName: "Locked-In Gains",
   description: "Track your gym progress, get better every session",
   icons: {

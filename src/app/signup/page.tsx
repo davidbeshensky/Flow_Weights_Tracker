@@ -14,40 +14,29 @@ export default function SignUpPage() {
   const handleSignUp = async () => {
     setError(null);
     setSuccess(null);
-
+  
     try {
-      // Attempt to sign up the user
-      const response = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ email, password }),
       });
-
-      // Log the response for debugging purposes
-      console.log("Sign-up response:", JSON.stringify(response, null, 2));
-
-      // Handle the sign-up response
-      if (response.data && response.data.user) {
-        if (
-          response.data.user.identities &&
-          response.data.user.identities.length > 0
-        ) {
-          console.log("Sign-up successful!");
-          setSuccess(
-            "Sign-up successful! Please check your email to activate your account."
-          );
-          setTimeout(() => router.push("/login"), 3000); // Redirect to login
-        } else {
-          console.log("Email address is already taken.");
-          setError(
-            "This email is already registered. If you forgot your password, reset it using the link below."
-          );
-        }
-      } else if (response.error) {
-        throw new Error(response.error.message);
+  
+      const result = await response.json();
+  
+      // Check for errors from the API response
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to sign up.");
       }
+  
+      // Success logic
+      console.log("Sign-up response:", result);
+      setSuccess(
+        "Sign-up successful! Please check your email to activate your account."
+      );
+      setTimeout(() => router.push("/login"), 3000); // Redirect to login
     } catch (err: unknown) {
       console.error("Sign-up error:", err);
       setError(
@@ -57,7 +46,7 @@ export default function SignUpPage() {
       );
     }
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
       {/* Header Section */}
