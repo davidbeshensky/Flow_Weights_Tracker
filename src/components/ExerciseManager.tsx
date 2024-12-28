@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import SignOutButton from "./SignOutButton";
 import Fuse from "fuse.js";
 import Link from "next/link";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import HamburgerMenu from "./HamburgerMenu";
 interface Exercise {
   id: string;
   name: string;
@@ -222,11 +222,13 @@ const ExerciseManager: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col justify-start bg-black/95 backdrop-blur-md text-white px-4">
       <div className="mx-auto w-full max-w-2xl p-2 rounded-lg">
-        <div className="mt-4 flex justify-between items-center mb-6">
+        <div className="mt-4 flex justify-between items-start mb-6">
           <h2 className="text-2xl font-bold text-white">
             Get After It. Record Results.
           </h2>
-          <SignOutButton />
+          <div className="relative">
+            <HamburgerMenu />
+          </div>
         </div>
 
         {/* Input for adding a new exercise/searching */}
