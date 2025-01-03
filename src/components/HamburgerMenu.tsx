@@ -37,19 +37,7 @@ const theme = createTheme({
           backgroundColor: "#1f2937", // Dark gray background
           color: "#ffffff", // White text
           border: "1px solid #1e3a8a", // Blue border
-          borderRadius: "8px", // Rounded corners
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)", // Subtle shadow
-        },
-      },
-    },
-    MuiMenuItem: {
-      styleOverrides: {
-        root: {
-          "&:hover": {
-            backgroundColor: "#1e3a8a", // Blue background on hover
-          },
-          borderRadius: "4px", // Rounded corners for items
-          padding: "8px 16px", // Padding for menu items
         },
       },
     },
@@ -70,7 +58,7 @@ const MenuWithCustomStyles: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-gray-700 rounded-md">
+      <div className="bg-gray-700">
         <IconButton
           onClick={handleMenuClick}
           aria-controls={open ? "user-menu" : undefined}

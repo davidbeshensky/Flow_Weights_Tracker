@@ -3,49 +3,39 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function SignUpPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false); // Tracks signup success
   const router = useRouter();
 
-  const handleSignUp = async () => {
+  const handleSignup = async () => {
     setError(null);
-    setSuccess(null);
-  
+
     try {
-      const response = await fetch("/api/auth/signup", {
+      const signupResponse = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
-  
-      const result = await response.json();
-  
-      // Check for errors from the API response
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to sign up.");
+
+      const signupData = await signupResponse.json();
+
+      if (!signupResponse.ok) {
+        setError(signupData.error || "Signup failed.");
+        return;
       }
-  
-      // Success logic
-      console.log("Sign-up response:", result);
-      setSuccess(
-        "Sign-up successful! Please check your email to activate your account."
-      );
-      setTimeout(() => router.push("/login"), 3000); // Redirect to login
-    } catch (err: unknown) {
-      console.error("Sign-up error:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred. Please try again."
-      );
+
+      setSuccess(true); // Mark signup as successful
+    } catch (err) {
+      console.error("Unexpected error during signup:", err);
+      setError("An unexpected error occurred. Please try again.");
     }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
       {/* Header Section */}
@@ -57,102 +47,97 @@ export default function SignUpPage() {
           Lockedingains
         </button>
       </header>
-      {/* Conditional Rendering */}
-      {success ? (
-        <div className="bg-gray-900 p-8 rounded-lg relative z-10 w-full max-w-md text-center">
-          <h1 className="text-4xl font-extrabold mb-4 text-blue-500">
-            Success!
-          </h1>
-          <p className="text-lg text-gray-400">{success}</p>
-          <p className="mt-4">Redirecting to the login page...</p>
-        </div>
-      ) : (
-        <div className="bg-gray-900 p-8 rounded-lg relative z-10 w-full max-w-md">
-          <h1 className="text-4xl font-extrabold text-center mb-4">
-            Create Your Account
-          </h1>
-          <p className="text-lg text-gray-400 text-center mb-6">
-            Start your journey today.
-          </p>
 
-          <div className="flex flex-col gap-3">
-            {/* Email Field */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-300"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full p-4 rounded-md bg-gray-900 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Enter your email"
-              />
-            </div>
+      <div className="relative z-10 w-full max-w-md">
+        {!success ? (
+          <>
+            {/* Signup Form */}
+            <h1 className="text-4xl font-extrabold text-center mb-4">Sign Up</h1>
+            <p className="text-lg text-gray-400 text-center mb-6">
+              Create an account to get started.
+            </p>
 
-            {/* Password Field */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-300"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full p-4 rounded-md bg-gray-900 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Create a password"
-              />
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="text-red-500 text-sm">
-                <p>{error}</p>
-                {error ===
-                  "This email is already registered. If you forgot your password, reset it using the link below." && (
-                  <p className="mt-2">
-                    <button
-                      onClick={() => router.push("/change-password")}
-                      className="text-blue-400 hover:underline"
-                    >
-                      Reset your password here.
-                    </button>
-                  </p>
-                )}
+            <div className="w-full flex flex-col gap-4 bg-gray-900 p-6 rounded-lg border border-gray-800">
+              {/* Email Input */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full p-4 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Enter your email"
+                />
               </div>
-            )}
 
-            {/* Sign Up Button */}
+              {/* Password Input */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full p-4 rounded-md bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              {/* Error Message */}
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
+              {/* Sign Up Button */}
+              <button
+                onClick={handleSignup}
+                className="w-full py-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300"
+              >
+                Sign Up
+              </button>
+
+              {/* Sign In Redirect */}
+              <p className="text-sm text-gray-400 text-center mt-4">
+                Already have an account?{" "}
+                <button
+                  onClick={() => router.push("/login")}
+                  className="text-blue-400 hover:underline"
+                >
+                  Sign in here
+                </button>
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Success Message */}
+            <h1 className="text-4xl font-extrabold text-center mb-4 text-blue-600">
+              Success!
+            </h1>
+            <p className="text-lg text-gray-400 text-center mb-6">
+              Check your email to activate your account.
+            </p>
+
             <button
-              onClick={handleSignUp}
+              onClick={() => router.push("/login")}
               className="w-full py-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300"
             >
-              Sign Up
+              Go to Sign In
             </button>
-
-            {/* Already Have an Account */}
-            <p className="text-sm text-gray-400 text-center mt-4">
-              Already have an account?{" "}
-              <button
-                onClick={() => router.push("/login")}
-                className="text-blue-400 hover:underline"
-              >
-                Sign in here
-              </button>
-            </p>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
