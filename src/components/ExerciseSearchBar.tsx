@@ -106,11 +106,11 @@ const ExerciseSearchBar: React.FC = () => {
         placeholder="Search exercises"
         value={inputValue}
         onChange={(e) => handleSearch(e.target.value)}
-        className="w-full px-4 py-2 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+        className="w-full rounded-md px-4 py-2 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
       {/* Dropdown */}
-      <div className="absolute w-full bg-gray-800 mt-1 shadow-lg z-10">
+      <div className="absolute rounded-md w-full bg-gray-800 mt-1 shadow-lg z-10">
         {filteredExercises.length > 0 ? (
           filteredExercises.map((exercise) => (
             <Link
@@ -118,7 +118,7 @@ const ExerciseSearchBar: React.FC = () => {
               href={`/exercises/${exercise.id}?name=${encodeURIComponent(
                 exercise.name
               )}`}
-              className="block px-4 py-2 hover:bg-gray-700 text-white"
+              className="block rounded-md px-4 py-2 hover:bg-gray-700 text-white"
             >
               {exercise.name}
             </Link>

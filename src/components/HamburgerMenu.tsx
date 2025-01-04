@@ -5,6 +5,7 @@ import { IconButton, Menu, MenuItem } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import SignOutButton from "./SignOutButton";
+import DashboardButton from "./DashboardButton";
 
 // Define the MUI theme
 const theme = createTheme({
@@ -58,7 +59,7 @@ const MenuWithCustomStyles: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-gray-700">
+      <div className="bg-gray-700 rounded-md">
         <IconButton
           onClick={handleMenuClick}
           aria-controls={open ? "user-menu" : undefined}
@@ -81,7 +82,8 @@ const MenuWithCustomStyles: React.FC = () => {
             horizontal: "right",
           }}
         >
-          <MenuItem onClick={handleMenuClose}>
+          <MenuItem className="flex flex-col" onClick={handleMenuClose}>
+            <DashboardButton />
             <SignOutButton />
           </MenuItem>
         </Menu>

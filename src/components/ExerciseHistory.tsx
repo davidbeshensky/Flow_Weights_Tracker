@@ -9,7 +9,9 @@ import {
   VictoryAxis,
   VictoryLine,
   VictoryTooltip,
+  VictoryBar,
 } from "victory";
+import SkeletalExerciseHistory from "./SkeletalExerciseHistory";
 
 interface HistoricalRecord {
   id: string;
@@ -31,8 +33,13 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
   onClose,
 }) => {
   const [records, setRecords] = useState<HistoricalRecord[]>([]);
+  const [view, setView] = useState<"weightGraph" | "volumeGraph">(
+    "weightGraph"
+  );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchData = async () => {
       const { data, error } = await supabase
         .from("exercise_records")
@@ -46,6 +53,7 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
         setRecords(data || []);
       }
     };
+    setIsLoading(false);
 
     fetchData();
   }, [exerciseId]);
@@ -72,6 +80,19 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
     };
   });
 
+  const volumeData = records.map((record) => {
+    const totalReps = record.reps.reduce((sum, reps) => sum + reps, 0);
+
+    return {
+      x: new Date(record.created_at).toLocaleDateString(), // Date as X-axis
+      y: totalReps, // Total reps as Y-axis
+    };
+  });
+
+  if (isLoading) {
+    return <SkeletalExerciseHistory />;
+  }
+
   return (
     <motion.div
       initial={{ x: "100%" }}
@@ -86,70 +107,138 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
       >
         ✕
       </button>
-      <h1 className="text-3xl font-bold text-center mb-6">
-        {exerciseName} - Average Weight vs Total Reps
-      </h1>
+      <h1 className="text-3xl font-bold text-center mb-6">{exerciseName}</h1>
 
+      {/* Toggle Buttons */}
+      <div className="flex justify-center gap-4 mb-6">
+        <button
+          onClick={() => setView("weightGraph")}
+          className={`px-4 py-2 rounded-lg ${
+            view === "weightGraph"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}
+        >
+          Average Weight Graph
+        </button>
+        <button
+          onClick={() => setView("volumeGraph")}
+          className={`px-4 py-2 rounded-lg ${
+            view === "volumeGraph"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}
+        >
+          Total Volume Graph
+        </button>
+      </div>
+
+      {/* Render Graphs Based on Selected View */}
       {records.length > 0 ? (
         <div className="w-full p-6 bg-gray-800 rounded-lg shadow-lg mb-6">
-          <VictoryChart
-            domainPadding={{ x: 20, y: 20 }}
-            padding={{ top: 50, bottom: 60, left: 60, right: 20 }}
-          >
-            {/* X-Axis: Dates */}
-            <VictoryAxis
-              tickFormat={(t) => t}
-              style={{
-                tickLabels: { fill: "white", fontSize: 10, angle: 45 },
-                grid: { stroke: "#4a5568", opacity: 0.2 },
-              }}
-            />
-            {/* Y-Axis: Average Weight */}
-            <VictoryAxis
-              dependentAxis
-              tickFormat={(t) => `${t.toFixed(1)} lbs`}
-              style={{
-                tickLabels: { fill: "white", fontSize: 10 },
-                grid: { stroke: "#4a5568", opacity: 0.2 },
-              }}
-            />
+          {view === "weightGraph" && (
+            <VictoryChart
+              domainPadding={{ x: 20, y: 20 }}
+              padding={{ top: 50, bottom: 60, left: 60, right: 20 }}
+            >
+              {/* X-Axis: Dates */}
+              <VictoryAxis
+                tickFormat={(t) => t}
+                style={{
+                  tickLabels: { fill: "white", fontSize: 10, angle: 45 },
+                  grid: { stroke: "#4a5568", opacity: 0.2 },
+                }}
+              />
+              {/* Y-Axis: Average Weight */}
+              <VictoryAxis
+                dependentAxis
+                tickFormat={(t) => `${t.toFixed(1)} lbs`}
+                style={{
+                  tickLabels: { fill: "white", fontSize: 10 },
+                  grid: { stroke: "#4a5568", opacity: 0.2 },
+                }}
+              />
+              {/* Scatter Plot */}
+              <VictoryScatter
+                data={scatterData}
+                size={({ datum }) => Math.sqrt(datum.size) * 2}
+                style={{
+                  data: { fill: "#1E88E5" },
+                }}
+                labels={({ datum }) =>
+                  `Date: ${datum.x}\nAvg Weight: ${datum.y.toFixed(
+                    1
+                  )} lbs\nTotal Reps: ${datum.totalReps}`
+                }
+                labelComponent={
+                  <VictoryTooltip
+                    flyoutStyle={{
+                      fill: "white",
+                      stroke: "gray",
+                      pointerEvents: "none",
+                    }}
+                    style={{ fill: "black", fontSize: 10 }}
+                  />
+                }
+              />
+              {/* Line Connecting Points */}
+              <VictoryLine
+                data={scatterData}
+                x="x"
+                y="y"
+                style={{
+                  data: { stroke: "#1E88E5", strokeWidth: 2 },
+                }}
+              />
+            </VictoryChart>
+          )}
 
-            {/* Scatter Plot */}
-            <VictoryScatter
-              data={scatterData}
-              size={({ datum }) => Math.sqrt(datum.size) * 2} // Scale size by total reps
-              style={{
-                data: {
-                  fill: "#1E88E5", // Point color
-                },
-              }}
-              labels={({ datum }) =>
-                `Date: ${datum.x}\nAvg Weight: ${datum.y.toFixed(
-                  1
-                )} lbs\nTotal Reps: ${datum.totalReps}`
-              }
-              labelComponent={
-                <VictoryTooltip
-                  flyoutStyle={{
-                    fill: "white",
-                    stroke: "gray",
-                    pointerEvents: "none",
-                  }}
-                  style={{ fill: "black", fontSize: 10 }}
-                />
-              }
-            />
-
-            {/* Line Connecting Points */}
-            <VictoryLine
-              data={scatterData}
-              x="x"
-              y="y"
-              style={{
-                data: { stroke: "#1E88E5", strokeWidth: 2 }, // Line color and width
-              }}
-            />
-          </VictoryChart>
+          {view === "volumeGraph" && (
+            <VictoryChart
+              domainPadding={{ x: 20, y: 20 }}
+              padding={{ top: 50, bottom: 60, left: 60, right: 20 }}
+            >
+              {/* X-Axis: Dates */}
+              <VictoryAxis
+                tickFormat={(t) => t}
+                style={{
+                  tickLabels: { fill: "white", fontSize: 10, angle: 45 },
+                  grid: { stroke: "#4a5568", opacity: 0.2 },
+                }}
+              />
+              {/* Y-Axis: Total Volume */}
+              <VictoryAxis
+                dependentAxis
+                tickFormat={(t) => `${t.toFixed(1)} reps`}
+                style={{
+                  tickLabels: { fill: "white", fontSize: 10 },
+                  grid: { stroke: "#4a5568", opacity: 0.2 },
+                }}
+              />
+              {/* Bar Chart */}
+              <VictoryBar
+                data={volumeData}
+                x="x"
+                y="y"
+                style={{
+                  data: { fill: "#1E88E5" },
+                }}
+                labels={({ datum }) =>
+                  `Date: ${datum.x}\nVolume: ${datum.y.toFixed(1)} reps`
+                }
+                labelComponent={
+                  <VictoryTooltip
+                    flyoutStyle={{
+                      fill: "white",
+                      stroke: "gray",
+                      pointerEvents: "none",
+                    }}
+                    style={{ fill: "black", fontSize: 10 }}
+                  />
+                }
+              />
+            </VictoryChart>
+          )}
         </div>
       ) : (
         <div className="w-full bg-gray-800 p-6 rounded-lg shadow-lg">

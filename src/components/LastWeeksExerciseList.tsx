@@ -116,12 +116,12 @@ const LastWeekExerciseList: React.FC = () => {
               weekday: "long",
             })}
           </h3>
-          <ul className="space-y-2=">
+          <ul className="space-y-1">
             {exercises.map((exercise) => (
               <li key={exercise.id}>
                 <Link
                   href={`/exercises/${exercise.id}`}
-                  className="block bg-gray-700 py-1 my-1 text-blue-500 hover:text-blue-700"
+                  className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
                 >
                   <div className="px-2">{exercise.name}</div>
                 </Link>

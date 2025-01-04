@@ -8,6 +8,8 @@ import { AnimatePresence } from "framer-motion";
 import EditExerciseName from "./EditExerciseName";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
+import SkeletalRecordForm from "./SkeletalRecordForm";
+import AddInformationModal from "./AddInformationModal";
 
 interface RecordFormProps {
   exerciseId: string;
@@ -34,15 +36,18 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   >([]);
   const [showHistory, setShowHistory] = useState(false);
   const [recentSetsDate, setRecentSetsDate] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleOpenHistory = () => setShowHistory(true);
   const handleCloseHistory = () => setShowHistory(false);
+  const [showAddInfoModal, setShowAddInfoModal] = useState(false);
 
   const router = useRouter();
 
   // Fetch exercise name and the most recent record for the exercise on component mount
   useEffect(() => {
     const fetchExerciseData = async () => {
+      setIsLoading(true);
       try {
         const { data: exerciseData, error: exerciseError } = await supabase
           .from("exercises")
@@ -89,6 +94,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       } catch (err) {
         console.error("Unexpected error fetching data:", err);
         setError("An unexpected error occurred.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -187,6 +194,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     setSets((prevSets) => prevSets.filter((_, i) => i !== index));
   };
 
+  if (isLoading) {
+    return <SkeletalRecordForm />;
+  }
+
   return (
     <div className="p-6 bg-black/95 text-white rounded-lg max-w-3xl mx-auto shadow-lg">
       {/* Error Message */}
@@ -234,9 +245,19 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
             </div>
           )}
         </AnimatePresence>
-        <button className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6">
+        <button
+          onClick={() => setShowAddInfoModal(true)}
+          className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
+        >
           Add Information
         </button>
+        {showAddInfoModal && (
+          <AddInformationModal
+            exerciseId={exerciseId}
+            exerciseName={exerciseName}
+            onClose={() => setShowAddInfoModal(false)}
+          />
+        )}
       </div>
       {/* Reps Input */}
       <div className="mb-4">
