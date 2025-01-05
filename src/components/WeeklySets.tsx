@@ -23,7 +23,7 @@ const muscleOptions = [
 // The shape returned by our Postgres function
 type MuscleSetsRow = {
   muscle: string;
-  total_sets: number;
+  total_weighted_sets: number;
 };
 
 export default function WeeklySets() {
@@ -46,10 +46,14 @@ export default function WeeklySets() {
 
         // 2) Call the Postgres function
         //    This will run the WITH current_week ... query on the DB side
-        const { data, error: rpcError } = await supabase
-          .rpc("get_sets_per_muscle_for_current_week", {
+        const { data, error: rpcError } = await supabase.rpc(
+          "get_weighted_sets_for_current_week",
+          {
             p_user_id: user.id,
-          });
+          }
+        );
+
+        console.log("RPC data:", data);
 
         if (rpcError) throw new Error(rpcError.message);
 
@@ -62,9 +66,9 @@ export default function WeeklySets() {
 
         (data ?? []).forEach((row: MuscleSetsRow) => {
           // muscle in DB might be lowercased or differ; ensure we match keys properly
-          const mg = row.muscle.toLowerCase();
+          const mg = row.muscle?.toLowerCase();
           if (setsMap[mg] !== undefined) {
-            setsMap[mg] = row.total_sets;
+            setsMap[mg] = row.total_weighted_sets;
           }
         });
 
