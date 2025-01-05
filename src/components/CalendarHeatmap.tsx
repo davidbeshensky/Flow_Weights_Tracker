@@ -9,7 +9,10 @@ type ActivityDay = {
 export default function MonthlyCalendarHeatmap() {
   const [activityData, setActivityData] = useState<ActivityDay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<{ date: string; count: number } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{
+    date: string;
+    count: number;
+  } | null>(null);
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -38,7 +41,21 @@ export default function MonthlyCalendarHeatmap() {
     fetchAllData();
   }, []);
 
-  if (loading) return <div>Loading heatmap...</div>;
+  if (loading) {
+    return (
+      <div className="m-4">
+        <h2 className="mb-2 text-xl font-semibold">Loading...</h2>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 42 }).map((_, index) => (
+            <div
+              key={`skeleton-${index}`}
+              className="w-8 h-8 rounded bg-gray-300 animate-pulse"
+            ></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const dateCountMap: Record<string, number> = {};
   activityData.forEach((item) => {
@@ -50,29 +67,33 @@ export default function MonthlyCalendarHeatmap() {
   return (
     <div className="m-4 relative">
       <h2 className="mb-2 text-xl font-semibold">{monthName}</h2>
-      <div className="flex flex-wrap w-[300px] gap-1">
+      <div className="grid grid-cols-7 gap-1">
         {allDates.map((dateInfo, index) => {
           const { dateStr, isCurrentMonth } = dateInfo;
-          const count = dateStr ? dateCountMap[dateStr] || 0 : 0;
+          const count =
+            dateStr && isCurrentMonth ? dateCountMap[dateStr] || 0 : 0;
           const color = isCurrentMonth ? getColor(count) : "bg-gray-700";
 
           return (
             <div
               key={index}
-              className={`w-8 h-8 rounded ${color} ${
-                isCurrentMonth ? "hover:ring hover:ring-blue-500 cursor-pointer" : ""
+              className={`w-8 h-8 rounded ${
+                isCurrentMonth ? color : "bg-gray-700"
+              } ${
+                isCurrentMonth
+                  ? "hover:ring hover:ring-blue-500 cursor-pointer"
+                  : ""
               }`}
-              onClick={() =>
-                isCurrentMonth && dateStr
-                  ? setSelectedDay({ date: dateStr, count })
-                  : null
-              }
-              title={isCurrentMonth ? `${dateStr}: ${count} records` : ""}
+              onClick={() => {
+                if (isCurrentMonth && dateStr) {
+                  setSelectedDay({ date: `${dateStr}T00:00:00Z`, count });
+                }
+              }}
+              title={`${dateStr}: ${count} records`}
             ></div>
           );
         })}
       </div>
-
       <div className="mt-4 flex gap-2">
         <button
           onClick={handlePrevMonth}
@@ -87,7 +108,6 @@ export default function MonthlyCalendarHeatmap() {
           Next
         </button>
       </div>
-
       {selectedDay && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-10">
           <div className="p-4 bg-white rounded shadow-lg text-gray-800 max-w-sm">
@@ -97,18 +117,19 @@ export default function MonthlyCalendarHeatmap() {
                 month: "long",
                 day: "numeric",
                 year: "numeric",
+                timeZone: "UTC", // Ensure UTC is used here
               })}
             </h3>
             <div className="flex justify-between">
-            <p className="text-sm p-1">
-              <strong>{selectedDay.count}</strong> records on this day.
-            </p>
-            <button
-              onClick={() => setSelectedDay(null)}
-              className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Close
-            </button>
+              <p className="text-sm p-1">
+                <strong>{selectedDay.count}</strong> records on this day.
+              </p>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -135,33 +156,41 @@ export default function MonthlyCalendarHeatmap() {
   }
 }
 
-// Helper: Generate calendar grid dates with placeholders
 function getCalendarGridDates(year: number, month: number) {
-    const dates = [];
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-  
-    // Add leading placeholders for days before the first day of the month
-    const firstWeekday = firstDay.getDay(); // 0=Sunday, 6=Saturday
-    for (let i = 0; i < firstWeekday; i++) {
-      dates.push({ dateStr: "", isCurrentMonth: false });
-    }
-  
-    // Add all days of the current month
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const dateStr = new Date(year, month, d).toISOString().split("T")[0];
-      dates.push({ dateStr, isCurrentMonth: true });
-    }
-  
-    // Add trailing placeholders for days after the last day of the month
-    const lastWeekday = lastDay.getDay(); // 0=Sunday, 6=Saturday
-    for (let i = lastWeekday + 1; i < 7; i++) {
-      dates.push({ dateStr: "", isCurrentMonth: false });
-    }
-  
-    return dates;
+  const dates = [];
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0); // Last day of the month
+
+  // Add leading placeholders as non-clickable, empty dates
+  const firstWeekday = firstDay.getDay(); // 0=Sunday, 6=Saturday
+  for (let i = 0; i < firstWeekday; i++) {
+    dates.push({ dateStr: "", isCurrentMonth: false }); // Placeholder
   }
-  
+
+  // Add all days of the current month as clickable
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = new Date(year, month, d).toISOString().split("T")[0];
+    dates.push({ dateStr, isCurrentMonth: true }); // Actual dates
+  }
+
+  // Add trailing placeholders for days after the last day of the month
+  const lastWeekday = lastDay.getDay(); // 0=Sunday, 6=Saturday
+  const trailingDays = 6 - lastWeekday; // Adjust the trailing placeholders to fill up to Saturday
+  for (let i = 0; i < trailingDays; i++) {
+    dates.push({ dateStr: "", isCurrentMonth: false });
+  }
+
+  // Ensure the grid is always 7 columns wide and 6 rows tall (42 total cells)
+  const totalDays = dates.length;
+  if (totalDays < 42) {
+    const extraPlaceholders = 42 - totalDays;
+    for (let i = 0; i < extraPlaceholders; i++) {
+      dates.push({ dateStr: "", isCurrentMonth: false });
+    }
+  }
+
+  return dates;
+}
 
 // Helper: Tailwind blue color scale
 function getColor(count: number): string {
