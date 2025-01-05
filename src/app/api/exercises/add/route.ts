@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseClient } from '@/lib/supabaseClient';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
     // Get the user session
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = await supabaseClient.auth.getSession();
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Insert the exercise
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('exercises')
       .insert({ name, user_id: session.user.id });
 

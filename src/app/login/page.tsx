@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -10,38 +9,36 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter(); // Initialize router
 
-  const handleLogin = async () => {
+  async function handleLogin() {
     setError(null);
 
-    // Attempt to sign in
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // Make a request to our new /api/login route
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (error) {
-      console.error("Sign-in error:", error.message);
-      setError(error.message);
-      return;
-    }
+      const data = await res.json();
+      if (!res.ok) {
+        // e.g., 401
+        console.error("Login error:", data.error);
+        setError(data.error);
+        return;
+      }
 
-    // Confirm session exists
-    const { data: session, error: sessionError } =
-      await supabase.auth.getSession();
-    if (sessionError) {
-      console.error("Error fetching session:", sessionError.message);
+      // On success, the server has set a cookie. 
+      // The user is now "logged in" from the server's perspective.
+      console.log("Login success, user:", data.user);
+
+      // Optionally navigate to the main page or wherever
+      router.push("/");
+    } catch (err: unknown) {
+      console.error("Unexpected error during login:", err);
       setError("Unexpected error. Please try again.");
-      return;
     }
-
-    if (session?.session?.user) {
-      console.log("User logged in successfully, routing to the main page");
-      router.push("/"); // Navigate to the main page
-    } else {
-      console.warn("Session not found after login");
-      setError("Login failed. Please try again.");
-    }
-  };
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">

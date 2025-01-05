@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 
 interface Exercise {
@@ -45,7 +45,7 @@ const LastWeekExerciseList: React.FC = () => {
 
       try {
         const { data: session, error: sessionError } =
-          await supabase.auth.getSession();
+          await supabaseClient.auth.getSession();
 
         if (sessionError || !session?.session) {
           setError("You must be logged in to view exercise history.");
@@ -57,7 +57,7 @@ const LastWeekExerciseList: React.FC = () => {
         console.log("Fetching records for date range:", { start, end });
 
         // Query exercise records and join with exercises
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("exercise_records")
           .select("exercise_id, exercises!inner(id, name)")
           .gte("created_at", start)

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -31,7 +31,7 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
     }
 
     try {
-      const { error, data } = await supabase
+      const { error, data } = await supabaseClient
         .from("exercises")
         .update({ name: newName.trim() })
         .eq("id", exerciseId);

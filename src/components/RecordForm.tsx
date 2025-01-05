@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import ExerciseHistory from "./ExerciseHistory";
 import { AnimatePresence } from "framer-motion";
@@ -49,7 +49,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     const fetchExerciseData = async () => {
       setIsLoading(true);
       try {
-        const { data: exerciseData, error: exerciseError } = await supabase
+        const { data: exerciseData, error: exerciseError } = await supabaseClient
           .from("exercises")
           .select("name")
           .eq("id", exerciseId)
@@ -65,7 +65,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           setExerciseName(exerciseData.name);
         }
 
-        const { data: recentData, error: recentError } = await supabase
+        const { data: recentData, error: recentError } = await supabaseClient
           .from("exercise_records")
           .select("reps, weights, created_at")
           .eq("exercise_id", exerciseId)
@@ -138,7 +138,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     const repsArray = sets.map((set) => set.reps);
     const weightsArray = sets.map((set) => set.weight);
 
-    const { error } = await supabase.from("exercise_records").insert({
+    const { error } = await supabaseClient.from("exercise_records").insert({
       exercise_id: exerciseId,
       reps: repsArray,
       weights: weightsArray,

@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseClient } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 const SignOutButton: React.FC = () => {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
       console.error('Error signing out:', error.message);

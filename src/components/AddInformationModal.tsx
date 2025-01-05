@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import Fuse from "fuse.js";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -45,7 +45,7 @@ const AddInformationModal: React.FC<AddInformationModalProps> = ({
   useEffect(() => {
     const fetchExerciseData = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("exercises")
           .select("notes, muscles_worked")
           .eq("id", exerciseId)
@@ -107,7 +107,7 @@ const AddInformationModal: React.FC<AddInformationModalProps> = ({
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from("exercises")
         .update({
           notes: notes.trim() || null,

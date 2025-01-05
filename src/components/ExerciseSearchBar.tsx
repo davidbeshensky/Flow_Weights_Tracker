@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import Fuse from "fuse.js";
 import Link from "next/link";
 
@@ -21,14 +21,14 @@ const ExerciseSearchBar: React.FC = () => {
     const fetchExercises = async () => {
       try {
         const { data: session, error: sessionError } =
-          await supabase.auth.getSession();
+          await supabaseClient.auth.getSession();
 
         if (sessionError || !session?.session) {
           setError("You must be logged in to search exercises.");
           return;
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("exercises")
           .select("id, name")
           .eq("user_id", session.session.user.id);
@@ -67,13 +67,13 @@ const ExerciseSearchBar: React.FC = () => {
     if (!inputValue.trim()) return;
 
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: session } = await supabaseClient.auth.getSession();
       if (!session?.session) {
         setError("You must be logged in to create exercises.");
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("exercises")
         .insert({
           user_id: session.session.user.id,

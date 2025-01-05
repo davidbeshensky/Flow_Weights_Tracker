@@ -1,33 +1,30 @@
 "use client";
 
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-const AuthenticationWrapper: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export default function AuthenticationWrapper({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session?.session);
+      const { data: sessionData } = await supabase.auth.getSession();
+      setIsAuthenticated(!!sessionData?.session);
 
-      if (!session?.session) {
-        router.push("/splash"); // Redirect to splash page if unauthenticated
+      if (!sessionData?.session) {
+        router.push("/splash");
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, supabase]);
 
   if (isAuthenticated === null) {
-    return <p>Loading...</p>; // Render a loading state while checking authentication
+    return <p>Loading...</p>;
   }
 
   return <>{isAuthenticated ? children : null}</>;
-};
-
-export default AuthenticationWrapper;
+}

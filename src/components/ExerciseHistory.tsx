@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import {
   VictoryChart,
   VictoryScatter,
@@ -41,7 +41,7 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
   useEffect(() => {
     setIsLoading(true);
     const fetchData = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("exercise_records")
         .select("id, created_at, reps, weights, notes")
         .eq("exercise_id", exerciseId)

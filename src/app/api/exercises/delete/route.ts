@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Step 1: Delete all records in `exercise_records` associated with the exercise
-    const { error: recordsError } = await supabase
+    const { error: recordsError } = await supabaseClient
       .from("exercise_records")
       .delete()
       .eq("exercise_id", exerciseId);
@@ -23,7 +23,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Step 2: Delete the exercise itself in the `exercises` table
-    const { error: exerciseError } = await supabase
+    const { error: exerciseError } = await supabaseClient
       .from("exercises")
       .delete()
       .eq("id", exerciseId);
