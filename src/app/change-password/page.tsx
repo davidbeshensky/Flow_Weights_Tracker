@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function ChangePassword() {
@@ -16,7 +16,7 @@ export default function ChangePassword() {
     console.log("Redirecting to:", `${window.location.origin}/reset-password`);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`, // Custom reset page
       });
 

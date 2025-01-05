@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import CalendarHeatmap from "@/components/CalendarHeatmap";
+import WeeklySets from "@/components/WeeklySets";
 
 export default function Dashboard() {
   const [totalWeight, setTotalWeight] = useState<number | null>(null);
@@ -48,6 +49,7 @@ export default function Dashboard() {
       )}
 
       <CalendarHeatmap />
+      <WeeklySets />
     </div>
   );
 }
