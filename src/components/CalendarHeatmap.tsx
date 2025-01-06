@@ -44,7 +44,7 @@ export default function MonthlyCalendarHeatmap() {
   if (loading) {
     return (
       <div className="m-4">
-        <h2 className="mb-2 text-xl font-semibold">Loading...</h2>
+        <h2 className="mb-2 text-xl w-32 h-8 rounded bg-gray-300 animate-pulse"></h2>
         <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: 42 }).map((_, index) => (
             <div
@@ -52,6 +52,10 @@ export default function MonthlyCalendarHeatmap() {
               className="w-8 h-8 rounded bg-gray-300 animate-pulse"
             ></div>
           ))}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <div className="w-16 h-10 bg-blue-300 animate-pulse rounded"></div>
+          <div className="w-16 h-10 bg-blue-300 animate-pulse rounded"></div>
         </div>
       </div>
     );
