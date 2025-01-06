@@ -52,7 +52,9 @@ export default function SignupPage() {
         {!success ? (
           <>
             {/* Signup Form */}
-            <h1 className="text-4xl font-extrabold text-center mb-4">Sign Up</h1>
+            <h1 className="text-4xl font-extrabold text-center mb-4">
+              Sign Up
+            </h1>
             <p className="text-lg text-gray-400 text-center mb-6">
               Create an account to get started.
             </p>
@@ -133,7 +135,7 @@ export default function SignupPage() {
               onClick={() => router.push("/login")}
               className="w-full py-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300"
             >
-              Go to Sign In
+              Go to Lock In
             </button>
           </>
         )}

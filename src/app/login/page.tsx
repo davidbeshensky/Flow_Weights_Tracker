@@ -56,7 +56,7 @@ export default function LoginPage() {
           Welcome Back
         </h1>
         <p className="text-lg text-gray-400 text-center mb-6">
-          Sign in to continue your journey.
+          Lock in to continue your journey.
         </p>
 
         <div className="w-full flex flex-col gap-4 bg-gray-900 p-6 rounded-lg border border-gray-800">
