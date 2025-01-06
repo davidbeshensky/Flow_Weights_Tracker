@@ -175,7 +175,7 @@ const LastWeekExerciseList: React.FC = () => {
       <div className="mt-4 text-center text-gray-400">
         <h3 className="text-lg font-bold text-white mb-2">Welcome!</h3>
         <p>
-          You don`&apos;`t have any exercise records yet. Start tracking your workouts
+          You don&apos;t have any exercise records yet. Start tracking your workouts
           today!
         </p>
       </div>

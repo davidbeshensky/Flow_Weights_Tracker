@@ -136,7 +136,7 @@ const ExerciseSearchBar: React.FC = () => {
             onClick={handleCreateExercise}
             className="w-full px-4 py-2 text-left bg-blue-600 text-white hover:bg-blue-700"
           >
-            Create `&quot;`{inputValue.trim()}`&quot;` Exercise
+            Create &quot;{inputValue.trim()}&quot; Exercise
           </button>
         )}
       </div>
