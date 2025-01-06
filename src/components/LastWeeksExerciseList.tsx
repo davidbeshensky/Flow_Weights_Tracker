@@ -20,10 +20,9 @@ interface ExerciseRecordWithExercise {
 
 const LastWeekExerciseList: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper function doesn't rely on anything but is defined once
+  // Helper function to calculate date ranges
   const getDateRangeForWeek = useCallback((weeksAgo: number) => {
     const today = new Date();
     const targetDay = new Date(today);
@@ -39,17 +38,54 @@ const LastWeekExerciseList: React.FC = () => {
     return { start: startOfDay.toISOString(), end: endOfDay.toISOString() };
   }, []);
 
+  const checkForRecords = useCallback(async (): Promise<boolean> => {
+    try {
+      const { data: session, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError || !session?.session) {
+        setLoading(false);
+        console.error("No valid session found.");
+        return false;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("exercise_records")
+        .select("id, exercises!inner(user_id)") // Join with exercises table
+        .eq("exercises.user_id", session.session.user.id)
+        .limit(1); // Only fetch a single record to check existence
+
+      if (error) {
+        console.error("Error in query:", error.message);
+        setLoading(false);
+        return false;
+      }
+
+      if (!data || data.length === 0) {
+        console.log("No records found for the user.");
+        setLoading(false);
+        return false; // No records found
+      }
+
+      console.log("Records exist for the user:", data);
+      return true; // Records exist
+    } catch (err) {
+      console.error("Error checking for records:", err);
+      setLoading(false);
+      return false;
+    }
+  }, []);
+
+  // Function to fetch exercises for a specific week
   const fetchExercisesForWeek = useCallback(
-    async (weeksAgo: number): Promise<boolean> => {
+    async (weeksAgo: number): Promise<Exercise[]> => {
       const { start, end } = getDateRangeForWeek(weeksAgo);
       try {
         const { data: session, error: sessionError } =
           await supabaseClient.auth.getSession();
 
         if (sessionError || !session?.session) {
-          setError("You must be logged in to view exercise history.");
-          setLoading(false);
-          return false;
+          return [];
         }
 
         const { data, error } = await supabaseClient
@@ -59,64 +95,64 @@ const LastWeekExerciseList: React.FC = () => {
           .lte("created_at", end)
           .eq("exercises.user_id", session.session.user.id);
 
-        if (error) {
-          setError(error.message);
-          setLoading(false);
-          return false;
+        if (error || !data || data.length === 0) {
+          return [];
         }
 
-        if (data && data.length > 0) {
-          const uniqueExercises = Array.from(
-            new Map(
-              (data as ExerciseRecordWithExercise[])
-                // Flatten all exercises from each record
-                .flatMap((record) => record.exercises)
-                // Then map each exercise to the [id, { id, name }] tuple
-                .map((exercise) => [
-                  exercise.id,
-                  { id: exercise.id, name: exercise.name },
-                ])
-            ).values()
-          );
-          setExercises(uniqueExercises);
-          setLoading(false);
-          return true;
-        }
+        // Flatten and deduplicate exercises
+        return Array.from(
+          new Map(
+            (data as ExerciseRecordWithExercise[])
+              .flatMap((record) => record.exercises)
+              .map((exercise) => [
+                exercise.id,
+                { id: exercise.id, name: exercise.name },
+              ])
+          ).values()
+        );
       } catch (err) {
-        console.error("error fetching last weeks exercises:", err);
-        setError("An unexpected error occurred.");
-        setLoading(false);
-        return false;
+        console.error("Error fetching exercises:", err);
+        return [];
       }
-      return false;
     },
-    [getDateRangeForWeek, setError, setLoading, setExercises]
+    [getDateRangeForWeek]
   );
 
+  // Main effect to fetch data
   useEffect(() => {
-    // Since fetchExercisesForWeek is stable (useCallback),
-    // we can safely include it in the dependency array
     const fetchExercises = async () => {
       setLoading(true);
-      setError(null);
 
+      // Check if the user has any records at all
+      const hasRecords = await checkForRecords();
+      if (!hasRecords) {
+        setLoading(false); // Stop loading if no records exist
+        return;
+      }
+
+      // Fetch records week by week
       let weeksAgo = 1;
+      let allExercises: Exercise[] = [];
       let recordsFound = false;
 
       while (!recordsFound && weeksAgo <= 52) {
-        recordsFound = await fetchExercisesForWeek(weeksAgo);
-        weeksAgo++;
+        const weeklyExercises = await fetchExercisesForWeek(weeksAgo);
+        if (weeklyExercises.length > 0) {
+          allExercises = weeklyExercises;
+          recordsFound = true;
+        } else {
+          weeksAgo++;
+        }
       }
 
-      if (!recordsFound) {
-        setError("No exercise records found in the past year.");
-        setLoading(false);
-      }
+      setExercises(allExercises);
+      setLoading(false);
     };
-    fetchExercises();
-    // Include everything that "fetchExercises" touches
-  }, [fetchExercisesForWeek, setError, setLoading]);
 
+    fetchExercises();
+  }, [checkForRecords, fetchExercisesForWeek]);
+
+  // Loading state with skeleton loader
   if (loading) {
     return (
       <div className="mt-4">
@@ -125,7 +161,6 @@ const LastWeekExerciseList: React.FC = () => {
           {new Date().toLocaleDateString("en-US", { weekday: "long" })}
         </h3>
         <ul className="space-y-1">
-          {/* Render a fixed number of skeleton items to mimic the list */}
           {Array.from({ length: 6 }).map((_, index) => (
             <SkeletonItem key={index} />
           ))}
@@ -134,41 +169,40 @@ const LastWeekExerciseList: React.FC = () => {
     );
   }
 
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
+  // Show a friendly message if no exercises exist
+  if (exercises.length === 0) {
+    return (
+      <div className="mt-4 text-center text-gray-400">
+        <h3 className="text-lg font-bold text-white mb-2">Welcome!</h3>
+        <p>
+          You don`&apos;`t have any exercise records yet. Start tracking your workouts
+          today!
+        </p>
+      </div>
+    );
   }
 
+  // Render exercises
   return (
     <div className="mt-4">
-      {exercises.length > 0 ? (
-        <div>
-          <h3 className="text-lg font-bold text-white mb-2">
-            Exercises from last{" "}
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-            })}
-          </h3>
-          <ul className="space-y-1">
-            {exercises.map((exercise) => (
-              <li key={exercise.id}>
-                <Link
-                  href={`/exercises/${exercise.id}`}
-                  className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
-                >
-                  <div className="px-2">{exercise.name}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="text-center text-gray-400">
-          No exercise data from last{" "}
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-          })}
-        </p>
-      )}
+      <h3 className="text-lg font-bold text-white mb-2">
+        Exercises from last{" "}
+        {new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+        })}
+      </h3>
+      <ul className="space-y-1">
+        {exercises.map((exercise) => (
+          <li key={exercise.id}>
+            <Link
+              href={`/exercises/${exercise.id}`}
+              className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
+            >
+              <div className="px-2">{exercise.name}</div>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
