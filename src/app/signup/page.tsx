@@ -114,7 +114,7 @@ export default function SignupPage() {
                   onClick={() => router.push("/login")}
                   className="text-blue-400 hover:underline"
                 >
-                  Sign in here
+                  Lock in here
                 </button>
               </p>
             </div>

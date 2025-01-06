@@ -24,7 +24,7 @@ const Splash: React.FC = () => {
             className="mr-4 text-sm text-gray-400 hover:text-white transition"
             onClick={navigateToLogin}
           >
-            Sign In
+            Lock In
           </button>
           <button
             className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-md hover:bg-blue-700 transition"

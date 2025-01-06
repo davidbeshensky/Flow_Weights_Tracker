@@ -28,7 +28,7 @@ export default function LoginPage() {
         return;
       }
 
-      // On success, the server has set a cookie. 
+      // On success, the server has set a cookie.
       // The user is now "logged in" from the server's perspective.
       console.log("Login success, user:", data.user);
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
             onClick={handleLogin}
             className="w-full py-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300"
           >
-            Sign In
+            Lock In
           </button>
 
           {/* Sign Up Redirect */}
