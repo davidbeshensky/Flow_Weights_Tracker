@@ -7,7 +7,7 @@ const Success: React.FC = () => {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push("/"); // Navigates back to the prior page
+    router.push("/"); // Navigates back to the home page
   };
 
   return (
