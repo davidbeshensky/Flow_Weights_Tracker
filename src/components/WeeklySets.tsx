@@ -78,7 +78,7 @@ export default function WeeklySets() {
 
   if (loading) {
     return (
-      <div className="p-4 w-11/12">
+      <div className="p-4 max-w-sm w-11/12">
         <h2 className="text-xl font-semibold mb-4">
           Total Sets Per Muscle This Week
         </h2>

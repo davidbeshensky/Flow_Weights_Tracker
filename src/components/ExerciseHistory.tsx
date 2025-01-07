@@ -241,7 +241,7 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
           )}
         </div>
       ) : (
-        <div className="w-full bg-gray-800 p-6 rounded-lg shadow-lg">
+        <div className="w-full bg-gray-800 p-6 rounded-lg shadow-lg mb-2">
           <p className="text-center text-gray-400">
             Not enough data to display the chart. Add more records to see trends
             over time!
@@ -251,6 +251,7 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
 
       <div className="w-full bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold mb-4">Past Results</h2>
+        {records.length > 0 ? (
         <div className="space-y-4">
           {records
             .slice()
@@ -279,7 +280,12 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
                 </div>
               </div>
             ))}
-        </div>
+        </div> ) : (
+        <div className="w-full bg-gray-800 p-2 rounded-lg shadow-lg mb-2">
+        <p className="text-center text-gray-400">
+          no data yet. log some lifts!
+        </p>
+      </div>        )}
       </div>
     </motion.div>
   );

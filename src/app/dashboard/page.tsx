@@ -53,7 +53,7 @@ export default function Dashboard() {
       {/* If still loading totalWeight, show skeleton. Otherwise, show the actual value. */}
       {/* If still loading totalWeight, show skeleton. Otherwise, show the actual value. */}
       {loadingWeight ? (
-        <div className="bg-gray-800 p-7 pt-8 pb-6 w-11/12 rounded-lg shadow-lg">
+        <div className="bg-gray-800 p-7 pt-8 pb-6 max-w-sm w-11/12 rounded-lg shadow-lg">
           <div className="animate-pulse">
             <div className="h-6 bg-gray-600 rounded-t-md"></div>
             <div className="h-2 bg-gray-600 rounded-b-md"></div>
