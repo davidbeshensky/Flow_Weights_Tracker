@@ -19,10 +19,8 @@ const ExerciseManager: React.FC = () => {
             <br />
             1% Better Every Day.
           </h2>
-          <div>
+          <div className="flex flex-row gap-2 relative">
             <BuyMeACoffee />
-          </div>
-          <div className="relative">
             <HamburgerMenu />
           </div>
         </div>
