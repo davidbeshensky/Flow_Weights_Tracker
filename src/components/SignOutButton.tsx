@@ -1,21 +1,28 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import React from "react";
+import { useRouter } from "next/navigation";
 
 const SignOutButton: React.FC = () => {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    const { error } = await supabaseClient.auth.signOut();
+    try {
+      const response = await fetch("/api/auth/signout", {
+        method: "POST",
+      });
 
-    if (error) {
-      console.error('Error signing out:', error.message);
-      return;
+      if (!response.ok) {
+        const { error } = await response.json();
+        console.error("Error signing out:", error);
+        return;
+      }
+
+      // Redirect to the splash page after a successful sign-out
+      router.push("/splash");
+    } catch (error) {
+      console.error("Unexpected error during sign out:", error);
     }
-
-    router.push('/splash'); // Redirect to splash page after sign out
   };
 
   return (

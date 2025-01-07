@@ -49,26 +49,44 @@ const LastWeekExerciseList: React.FC = () => {
         return false;
       }
 
-      const { data, error } = await supabaseClient
-        .from("exercise_records")
-        .select("id, exercises!inner(user_id)") // Join with exercises table
-        .eq("exercises.user_id", session.session.user.id)
-        .limit(1); // Only fetch a single record to check existence
+      // Loop through all days of the current week
+      const today = new Date();
+      for (let daysAgo = 0; daysAgo < 7; daysAgo++) {
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - daysAgo);
+        const startOfDay = new Date(
+          targetDate.getFullYear(),
+          targetDate.getMonth(),
+          targetDate.getDate()
+        );
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setHours(23, 59, 59, 999);
 
-      if (error) {
-        console.error("Error in query:", error.message);
-        setLoading(false);
-        return false;
+        const { data, error } = await supabaseClient
+          .from("exercise_records")
+          .select("id, exercises!inner(user_id)") // Join with exercises table
+          .gte("created_at", startOfDay.toISOString())
+          .lte("created_at", endOfDay.toISOString())
+          .eq("exercises.user_id", session.session.user.id)
+          .limit(1); // Only fetch a single record to check existence
+
+        if (error) {
+          console.error(
+            `Error checking records for ${targetDate}:`,
+            error.message
+          );
+          continue; // Skip this day if there's an error
+        }
+
+        if (data && data.length > 0) {
+          console.log(`Records exist for the user on ${targetDate}:`, data);
+          return true; // Records found for this day
+        }
       }
 
-      if (!data || data.length === 0) {
-        console.log("No records found for the user.");
-        setLoading(false);
-        return false; // No records found
-      }
-
-      console.log("Records exist for the user:", data);
-      return true; // Records exist
+      console.log("No records found for any day this week.");
+      setLoading(false);
+      return false; // No records found for the entire week
     } catch (err) {
       console.error("Error checking for records:", err);
       setLoading(false);
@@ -123,7 +141,7 @@ const LastWeekExerciseList: React.FC = () => {
     const fetchExercises = async () => {
       setLoading(true);
 
-      // Check if the user has any records at all
+      // Check if the user has any records for the current week
       const hasRecords = await checkForRecords();
       if (!hasRecords) {
         setLoading(false); // Stop loading if no records exist
