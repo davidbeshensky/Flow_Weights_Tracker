@@ -76,7 +76,7 @@ const BuyMeACoffee: React.FC = () => {
         >
           <h3 className="text-lg font-bold text-gray-700">Buy Me a Coffee ☕</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Support my ongoing addiction to artisanal coffee.
+            Support my ongoing addiction to supporting local business's by buying artisanal coffee.
           </p>
           <button
             onClick={handleDonateOnce}
