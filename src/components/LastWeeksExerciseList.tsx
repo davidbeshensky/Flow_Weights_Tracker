@@ -227,7 +227,7 @@ const LastWeekExerciseList: React.FC = () => {
         })}
       </h3>
       <ul className="space-y-1">
-        {exercises.map((exercise, index) => (
+        {exercises.map((exercise) => (
           <li key={`${exercise.id}`}>
             {/* Use a unique key */}
             <Link
