@@ -94,15 +94,16 @@ const LastWeekExerciseList: React.FC = () => {
     }
   }, []);
 
-  // Function to fetch exercises for a specific week
   const fetchExercisesForWeek = useCallback(
     async (weeksAgo: number): Promise<Exercise[]> => {
       const { start, end } = getDateRangeForWeek(weeksAgo);
+
       try {
         const { data: session, error: sessionError } =
           await supabaseClient.auth.getSession();
 
         if (sessionError || !session?.session) {
+          console.error("No valid session found.");
           return [];
         }
 
@@ -113,21 +114,38 @@ const LastWeekExerciseList: React.FC = () => {
           .lte("created_at", end)
           .eq("exercises.user_id", session.session.user.id);
 
-        if (error || !data || data.length === 0) {
+        if (error) {
+          console.error("Error fetching data:", error.message);
           return [];
         }
 
-        // Flatten and deduplicate exercises
-        return Array.from(
-          new Map(
-            (data as ExerciseRecordWithExercise[])
-              .flatMap((record) => record.exercises)
-              .map((exercise) => [
-                exercise.id,
-                { id: exercise.id, name: exercise.name },
-              ])
-          ).values()
-        );
+        if (!data || data.length === 0) {
+          console.log("No exercises found for this period.");
+          return [];
+        }
+
+        // Ensure `exercises` is treated as an array
+        const deduplicatedExercises: Exercise[] = [];
+        const uniqueExercises = new Set<string>();
+
+        (data as ExerciseRecordWithExercise[]).forEach((record) => {
+          // Handle cases where `exercises` is not an array
+          const exercisesArray = Array.isArray(record.exercises)
+            ? record.exercises
+            : [record.exercises];
+
+          exercisesArray.forEach((exercise) => {
+            if (!uniqueExercises.has(exercise.id)) {
+              uniqueExercises.add(exercise.id);
+              deduplicatedExercises.push({
+                id: exercise.id,
+                name: exercise.name,
+              });
+            }
+          });
+        });
+
+        return deduplicatedExercises;
       } catch (err) {
         console.error("Error fetching exercises:", err);
         return [];
@@ -141,14 +159,13 @@ const LastWeekExerciseList: React.FC = () => {
     const fetchExercises = async () => {
       setLoading(true);
 
-      // Check if the user has any records for the current week
-      const hasRecords = await checkForRecords();
+      const hasRecords = await checkForRecords(); // Async operation
       if (!hasRecords) {
-        setLoading(false); // Stop loading if no records exist
+        setLoading(false);
         return;
       }
 
-      // Fetch records week by week
+      // Fetch weekly exercises
       let weeksAgo = 1;
       let allExercises: Exercise[] = [];
       let recordsFound = false;
@@ -163,11 +180,11 @@ const LastWeekExerciseList: React.FC = () => {
         }
       }
 
-      setExercises(allExercises);
+      setExercises(allExercises); // Update state after async operation
       setLoading(false);
     };
 
-    fetchExercises();
+    fetchExercises(); // Ensure async state updates are in effect
   }, [checkForRecords, fetchExercisesForWeek]);
 
   // Loading state with skeleton loader
@@ -210,8 +227,9 @@ const LastWeekExerciseList: React.FC = () => {
         })}
       </h3>
       <ul className="space-y-1">
-        {exercises.map((exercise) => (
-          <li key={exercise.id}>
+        {exercises.map((exercise, index) => (
+          <li key={`${exercise.id}`}>
+            {/* Use a unique key */}
             <Link
               href={`/exercises/${exercise.id}`}
               className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
