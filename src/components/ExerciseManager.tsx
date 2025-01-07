@@ -5,6 +5,7 @@ import React from "react";
 import HamburgerMenu from "./HamburgerMenu";
 import ExerciseSearchBar from "./ExerciseSearchBar";
 import LastWeekExerciseList from "./LastWeeksExerciseList";
+import BuyMeACoffee from "./BuyMeACoffee";
 
 const ExerciseManager: React.FC = () => {
   return (
@@ -18,7 +19,9 @@ const ExerciseManager: React.FC = () => {
             <br />
             1% Better Every Day.
           </h2>
-
+          <div>
+            <BuyMeACoffee />
+          </div>
           <div className="relative">
             <HamburgerMenu />
           </div>
