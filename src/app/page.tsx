@@ -1,10 +1,13 @@
-import AuthenticationWrapper from '@/components/AuthenticationWrapper';
-import ExerciseManager from '@/components/ExerciseManager';
+import AuthenticationWrapper from "@/components/AuthenticationWrapper";
+import ExerciseManager from "@/components/ExerciseManager";
+import { WorkoutProvider } from "@/components/WorkoutContext";
 
 const Home: React.FC = () => {
   return (
     <AuthenticationWrapper>
-      <ExerciseManager />
+      <WorkoutProvider>
+        <ExerciseManager />
+      </WorkoutProvider>
     </AuthenticationWrapper>
   );
 };

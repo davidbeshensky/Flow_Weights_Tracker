@@ -31,6 +31,7 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
     }
 
     try {
+      //updating in supabase
       const { error, data } = await supabaseClient
         .from("exercises")
         .update({ name: newName.trim() })
@@ -40,6 +41,17 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
       if (error) {
         setError("Failed to update exercise name.");
       } else {
+        // Update localStorage cache
+        const cachedExercises = JSON.parse(
+          localStorage.getItem("exercises") || "[]"
+        );
+        const updatedExercises = cachedExercises.map(
+          (exercise: { id: string; name: string }) =>
+            exercise.id === exerciseId
+              ? { ...exercise, name: newName.trim() }
+              : exercise
+        );
+        localStorage.setItem("exercises", JSON.stringify(updatedExercises));
         setIsEditing(false);
         setError(null);
         onUpdateName(newName.trim());

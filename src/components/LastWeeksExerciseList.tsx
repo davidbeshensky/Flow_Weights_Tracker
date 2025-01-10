@@ -1,235 +1,145 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { SkeletonItem } from "./SkeletonItem";
 
 interface Exercise {
   id: string;
   name: string;
 }
 
-interface ExerciseRecordWithExercise {
-  exercise_id: string;
-  exercises: {
-    id: string;
-    name: string;
-  }[];
-}
-
-const LastWeekExerciseList: React.FC = () => {
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+const ExerciseList: React.FC = () => {
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+  const [recentExercises, setRecentExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showRecentOnly, setShowRecentOnly] = useState(false);
 
-  // Helper function to calculate date ranges
-  const getDateRangeForWeek = useCallback((weeksAgo: number) => {
-    const today = new Date();
-    const targetDay = new Date(today);
-    targetDay.setDate(today.getDate() - 7 * weeksAgo);
-    const startOfDay = new Date(
-      targetDay.getFullYear(),
-      targetDay.getMonth(),
-      targetDay.getDate()
-    );
-    const endOfDay = new Date(startOfDay);
-    endOfDay.setHours(23, 59, 59, 999);
+  // Fetch recent records for exercises
+  const fetchRecentRecords = useCallback(async (exercises: Exercise[]) => {
+    try {
+      const { data: session } = await supabaseClient.auth.getSession();
+      if (!session?.session) return;
 
-    return { start: startOfDay.toISOString(), end: endOfDay.toISOString() };
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data: records, error } = await supabaseClient
+        .from("exercise_records")
+        .select("exercise_id, created_at")
+        .in(
+          "exercise_id",
+          exercises.map((exercise) => exercise.id)
+        );
+
+      if (error) {
+        console.error("Error fetching records:", error.message);
+        return;
+      }
+
+      // Determine exercises with recent activity
+      const recentIds = new Set(
+        records
+          ?.filter((record) => new Date(record.created_at) >= oneWeekAgo)
+          .map((record) => record.exercise_id)
+      );
+
+      const recentExercises = exercises.filter((exercise) =>
+        recentIds.has(exercise.id)
+      );
+
+      setRecentExercises(recentExercises);
+    } catch (err) {
+      console.error("Error fetching recent records:", err);
+    }
   }, []);
 
-  const checkForRecords = useCallback(async (): Promise<boolean> => {
+  // Fetch exercises from Supabase
+  const fetchExercises = useCallback(async () => {
+    setLoading(true);
+
     try {
       const { data: session, error: sessionError } =
         await supabaseClient.auth.getSession();
 
       if (sessionError || !session?.session) {
-        setLoading(false);
         console.error("No valid session found.");
-        return false;
-      }
-
-      // Loop through all days of the current week
-      const today = new Date();
-      for (let daysAgo = 0; daysAgo < 7; daysAgo++) {
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() - daysAgo);
-        const startOfDay = new Date(
-          targetDate.getFullYear(),
-          targetDate.getMonth(),
-          targetDate.getDate()
-        );
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const { data, error } = await supabaseClient
-          .from("exercise_records")
-          .select("id, exercises!inner(user_id)") // Join with exercises table
-          .gte("created_at", startOfDay.toISOString())
-          .lte("created_at", endOfDay.toISOString())
-          .eq("exercises.user_id", session.session.user.id)
-          .limit(1); // Only fetch a single record to check existence
-
-        if (error) {
-          console.error(
-            `Error checking records for ${targetDate}:`,
-            error.message
-          );
-          continue; // Skip this day if there's an error
-        }
-
-        if (data && data.length > 0) {
-          console.log(`Records exist for the user on ${targetDate}:`, data);
-          return true; // Records found for this day
-        }
-      }
-
-      console.log("No records found for any day this week.");
-      setLoading(false);
-      return false; // No records found for the entire week
-    } catch (err) {
-      console.error("Error checking for records:", err);
-      setLoading(false);
-      return false;
-    }
-  }, []);
-
-  const fetchExercisesForWeek = useCallback(
-    async (weeksAgo: number): Promise<Exercise[]> => {
-      const { start, end } = getDateRangeForWeek(weeksAgo);
-
-      try {
-        const { data: session, error: sessionError } =
-          await supabaseClient.auth.getSession();
-
-        if (sessionError || !session?.session) {
-          console.error("No valid session found.");
-          return [];
-        }
-
-        const { data, error } = await supabaseClient
-          .from("exercise_records")
-          .select("exercise_id, exercises!inner(id, name)")
-          .gte("created_at", start)
-          .lte("created_at", end)
-          .eq("exercises.user_id", session.session.user.id);
-
-        if (error) {
-          console.error("Error fetching data:", error.message);
-          return [];
-        }
-
-        if (!data || data.length === 0) {
-          console.log("No exercises found for this period.");
-          return [];
-        }
-
-        // Ensure `exercises` is treated as an array
-        const deduplicatedExercises: Exercise[] = [];
-        const uniqueExercises = new Set<string>();
-
-        (data as ExerciseRecordWithExercise[]).forEach((record) => {
-          // Handle cases where `exercises` is not an array
-          const exercisesArray = Array.isArray(record.exercises)
-            ? record.exercises
-            : [record.exercises];
-
-          exercisesArray.forEach((exercise) => {
-            if (!uniqueExercises.has(exercise.id)) {
-              uniqueExercises.add(exercise.id);
-              deduplicatedExercises.push({
-                id: exercise.id,
-                name: exercise.name,
-              });
-            }
-          });
-        });
-
-        return deduplicatedExercises;
-      } catch (err) {
-        console.error("Error fetching exercises:", err);
-        return [];
-      }
-    },
-    [getDateRangeForWeek]
-  );
-
-  // Main effect to fetch data
-  useEffect(() => {
-    const fetchExercises = async () => {
-      setLoading(true);
-
-      const hasRecords = await checkForRecords(); // Async operation
-      if (!hasRecords) {
         setLoading(false);
         return;
       }
 
-      // Fetch weekly exercises
-      let weeksAgo = 1;
-      let allExercises: Exercise[] = [];
-      let recordsFound = false;
+      const { data: exerciseData, error: exerciseError } = await supabaseClient
+        .from("exercises")
+        .select("id, name")
+        .eq("user_id", session.session.user.id);
 
-      while (!recordsFound && weeksAgo <= 52) {
-        const weeklyExercises = await fetchExercisesForWeek(weeksAgo);
-        if (weeklyExercises.length > 0) {
-          allExercises = weeklyExercises;
-          recordsFound = true;
-        } else {
-          weeksAgo++;
-        }
+      if (exerciseError) {
+        console.error("Error fetching exercises:", exerciseError.message);
+        setLoading(false);
+        return;
       }
 
-      setExercises(allExercises); // Update state after async operation
+      if (exerciseData) {
+        setAllExercises(exerciseData);
+        localStorage.setItem("exercises", JSON.stringify(exerciseData));
+        fetchRecentRecords(exerciseData); // Fetch recent records in the background
+      }
+    } catch (err) {
+      console.error("Error fetching exercises:", err);
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [fetchRecentRecords]);
 
-    fetchExercises(); // Ensure async state updates are in effect
-  }, [checkForRecords, fetchExercisesForWeek]);
+  // Load exercises from localStorage
+  useEffect(() => {
+    const cachedExercises = localStorage.getItem("exercises");
+    if (cachedExercises) {
+      const parsedExercises = JSON.parse(cachedExercises);
+      setAllExercises(parsedExercises);
+      setLoading(false);
+      fetchRecentRecords(parsedExercises); // Fetch recent records in the background
+    } else {
+      fetchExercises();
+    }
+  }, [fetchExercises, fetchRecentRecords]);
 
-  // Loading state with skeleton loader
+  const displayedExercises = showRecentOnly ? recentExercises : allExercises;
+
   if (loading) {
     return (
       <div className="mt-4">
         <h3 className="text-lg font-bold text-white mb-2">
-          Exercises from last{" "}
-          {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+          Loading exercises...
         </h3>
-        <ul className="space-y-1">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <SkeletonItem key={index} />
-          ))}
-        </ul>
+        <p className="text-gray-400">Loading...</p>
       </div>
     );
   }
 
-  // Show a friendly message if no exercises exist
-  if (exercises.length === 0) {
+  if (allExercises.length === 0) {
     return (
       <div className="mt-4 text-center text-gray-400">
-        <h3 className="text-lg font-bold text-white mb-2">Welcome!</h3>
-        <p>
-          You don&apos;t have any exercise records yet. Start tracking your
-          workouts today!
-        </p>
+        <h3 className="text-lg font-bold text-white mb-2">
+          No Exercises Found
+        </h3>
+        <p>Start tracking your workouts to see them here!</p>
       </div>
     );
   }
 
-  // Render exercises
   return (
     <div className="mt-4">
-      <h3 className="text-lg font-bold text-white mb-2">
-        Exercises from last{" "}
-        {new Date().toLocaleDateString("en-US", {
-          weekday: "long",
-        })}
-      </h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold text-white">Your Exercises</h3>
+        <button
+          onClick={() => setShowRecentOnly((prev) => !prev)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          {showRecentOnly ? "Show All" : "Show Recent"}
+        </button>
+      </div>
       <ul className="space-y-1">
-        {exercises.map((exercise) => (
-          <li key={`${exercise.id}`}>
-            {/* Use a unique key */}
+        {displayedExercises.map((exercise) => (
+          <li key={exercise.id}>
             <Link
               href={`/exercises/${exercise.id}`}
               className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
@@ -243,4 +153,4 @@ const LastWeekExerciseList: React.FC = () => {
   );
 };
 
-export default LastWeekExerciseList;
+export default ExerciseList;

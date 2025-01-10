@@ -1,6 +1,7 @@
 "use client";
 import { useParams } from "next/navigation";
 import RecordForm from "@/components/RecordForm";
+import { WorkoutProvider } from "@/components/WorkoutContext";
 
 interface Params {
   exerciseId: string;
@@ -21,11 +22,13 @@ const ExercisePage = () => {
   }
 
   return (
-    <div className="min-h-screen flex justify-start  bg-black/95 backdrop-blur-lg  text-white">
-      <div className="mx-auto min-w-96 m-2">
-        <RecordForm exerciseId={exerciseId} />
+    <WorkoutProvider>
+      <div className="min-h-screen flex justify-start  bg-black/95 backdrop-blur-lg  text-white">
+        <div className="mx-auto min-w-96 m-2">
+          <RecordForm exerciseId={exerciseId} />
+        </div>
       </div>
-    </div>
+    </WorkoutProvider>
   );
 };
 

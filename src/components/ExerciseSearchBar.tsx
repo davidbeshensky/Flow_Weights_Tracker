@@ -16,36 +16,44 @@ const ExerciseSearchBar: React.FC = () => {
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all exercises on mount
+  // Load exercises from localStorage or fetch from the database
   useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const { data: session, error: sessionError } =
-          await supabaseClient.auth.getSession();
+    const loadExercises = async () => {
+      const cachedExercises = JSON.parse(
+        localStorage.getItem("exercises") || "[]"
+      );
+      if (cachedExercises.length > 0) {
+        setExercises(cachedExercises);
+      } else {
+        try {
+          const { data: session, error: sessionError } =
+            await supabaseClient.auth.getSession();
 
-        if (sessionError || !session?.session) {
-          setError("You must be logged in to search exercises.");
-          return;
+          if (sessionError || !session?.session) {
+            setError("You must be logged in to search exercises.");
+            return;
+          }
+
+          const { data, error } = await supabaseClient
+            .from("exercises")
+            .select("id, name")
+            .eq("user_id", session.session.user.id);
+
+          if (error) {
+            setError(error.message);
+            return;
+          }
+
+          setExercises(data || []);
+          localStorage.setItem("exercises", JSON.stringify(data || []));
+        } catch (err) {
+          setError("An unexpected error occurred.");
+          console.error("Error fetching exercises:", err);
         }
-
-        const { data, error } = await supabaseClient
-          .from("exercises")
-          .select("id, name")
-          .eq("user_id", session.session.user.id);
-
-        if (error) {
-          setError(error.message);
-          return;
-        }
-
-        setExercises(data || []);
-      } catch (err) {
-        setError("An unexpected error occurred.");
-        console.error("Error fetching exercises:", err);
       }
     };
 
-    fetchExercises();
+    loadExercises();
   }, []);
 
   // Handle search
@@ -86,11 +94,17 @@ const ExerciseSearchBar: React.FC = () => {
         return;
       }
 
-      // Redirect to the new exercise or refresh
       if (data && data[0]) {
-        window.location.href = `/exercises/${data[0].id}?name=${encodeURIComponent(
-          data[0].name
-        )}`;
+        // Update local cache
+        const newExercise = data[0];
+        const updatedExercises = [...exercises, newExercise];
+        setExercises(updatedExercises);
+        localStorage.setItem("exercises", JSON.stringify(updatedExercises));
+
+        // Redirect to the new exercise
+        window.location.href = `/exercises/${
+          newExercise.id
+        }?name=${encodeURIComponent(newExercise.name)}`;
       }
     } catch (err) {
       console.error("Error creating exercise:", err);
@@ -111,34 +125,33 @@ const ExerciseSearchBar: React.FC = () => {
 
       {/* Dropdown */}
       <div className="absolute rounded-md w-full bg-gray-800 mt-1 shadow-lg z-10">
-        {filteredExercises.length > 0 ? (
-          filteredExercises.map((exercise) => (
-            <Link
-              key={exercise.id}
-              href={`/exercises/${exercise.id}?name=${encodeURIComponent(
-                exercise.name
-              )}`}
-              className="block rounded-md px-4 py-2 hover:bg-gray-700 text-white"
+        {filteredExercises.length > 0
+          ? filteredExercises.map((exercise) => (
+              <Link
+                key={exercise.id}
+                href={`/exercises/${exercise.id}?name=${encodeURIComponent(
+                  exercise.name
+                )}`}
+                className="block rounded-md px-4 py-2 hover:bg-gray-700 text-white"
+              >
+                {exercise.name}
+              </Link>
+            ))
+          : inputValue.trim() && (
+              <div className="px-4 py-2 text-gray-400">No matches found.</div>
+            )}
+        {inputValue.trim() &&
+          !exercises.some(
+            (exercise) =>
+              exercise.name.toLowerCase() === inputValue.trim().toLowerCase()
+          ) && (
+            <button
+              onClick={handleCreateExercise}
+              className="w-full px-4 py-2 text-left bg-blue-600 text-white hover:bg-blue-700"
             >
-              {exercise.name}
-            </Link>
-          ))
-        ) : inputValue.trim() && (
-          <div className="px-4 py-2 text-gray-400">
-            No matches found.
-          </div>
-        )}
-        {inputValue.trim() && !exercises.some(
-          (exercise) =>
-            exercise.name.toLowerCase() === inputValue.trim().toLowerCase()
-        ) && (
-          <button
-            onClick={handleCreateExercise}
-            className="w-full px-4 py-2 text-left bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Create &quot;{inputValue.trim()}&quot; Exercise
-          </button>
-        )}
+              Create &quot;{inputValue.trim()}&quot; Exercise
+            </button>
+          )}
       </div>
 
       {/* Error Message */}
