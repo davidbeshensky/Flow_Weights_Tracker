@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET(request: NextRequest, context: { params: { exerciseId: string } }) {
-  const { params } = context;
-  const exerciseId = params.exerciseId;
+export async function GET(
+  request: NextRequest,
+  context: { params: { exerciseId: string } }
+) {
+  const { exerciseId } = context.params; // Access params correctly
 
   if (!exerciseId) {
     return NextResponse.json(
-      { error: "exerciseId is required" },
+      { error: "exerciseId is required." },
       { status: 400 }
     );
   }
