@@ -1,8 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET(req: Request, { params }: { params: { exerciseId: string } }) {
-  const { exerciseId } = params;
+export async function GET(req: NextRequest) {
+  // Extract `exerciseId` from the request URL
+  const url = new URL(req.url);
+  const pathSegments = url.pathname.split("/");
+  const exerciseId = pathSegments[pathSegments.indexOf("exercises") + 1]; // Extract exerciseId dynamically
+
+  if (!exerciseId) {
+    return NextResponse.json(
+      { error: "exerciseId is required." },
+      { status: 400 }
+    );
+  }
 
   try {
     const supabase = await supabaseServer();
@@ -36,15 +46,24 @@ export async function GET(req: Request, { params }: { params: { exerciseId: stri
       .order("set_number", { ascending: true });
 
     if (setsError) {
-      console.error("Error fetching sets for recent record:", setsError.message);
+      console.error(
+        "Error fetching sets for recent record:",
+        setsError.message
+      );
       return NextResponse.json({ error: setsError.message }, { status: 400 });
     }
 
     console.log("Fetched sets data:", setsData);
 
-    return NextResponse.json({ created_at, sets: setsData || [] }, { status: 200 });
+    return NextResponse.json(
+      { created_at, sets: setsData || [] },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Unexpected error:", error.message);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
