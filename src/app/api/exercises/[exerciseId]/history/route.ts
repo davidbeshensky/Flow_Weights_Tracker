@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { exerciseId: string } }
-) {
-  const { exerciseId } = context.params; // Access params correctly
+export async function GET(req: NextRequest, { params }: { params: { exerciseId: string } }) {
+  const { exerciseId } = params; // Extract exerciseId from params
 
   if (!exerciseId) {
     return NextResponse.json(
@@ -19,7 +16,7 @@ export async function GET(
 
     console.log("Fetching exercise history for ID:", exerciseId);
 
-    // Fetch exercise records
+    // Fetch all exercise records for the given exerciseId
     const { data: records, error: recordsError } = await supabase
       .from("exercise_records")
       .select("id, created_at, notes")
@@ -34,16 +31,16 @@ export async function GET(
       );
     }
 
-    // If no records are found, return an empty array
+    // Handle no records found
     if (!records || records.length === 0) {
-      console.warn("No records found for exercise ID:", exerciseId);
+      console.warn(`No records found for exercise ID: ${exerciseId}`);
       return NextResponse.json([], { status: 200 });
     }
 
-    // Fetch sets for each record
+    // Fetch sets for each exercise record
     const recordsWithSets = await Promise.all(
       records.map(async (record) => {
-        const { data: sets, error: setsError } = await supabase
+        const { data: setsData, error: setsError } = await supabase
           .from("exercise_set_records")
           .select("set_number, reps, weight")
           .eq("exercise_record_id", record.id)
@@ -57,17 +54,17 @@ export async function GET(
           return { ...record, sets: [] }; // Return the record with empty sets if there's an error
         }
 
-        return { ...record, sets: sets || [] }; // Add the fetched sets to the record
+        return { ...record, sets: setsData || [] }; // Add the fetched sets to the record
       })
     );
 
     console.log("Fetched exercise history with sets:", recordsWithSets);
 
     return NextResponse.json(recordsWithSets, { status: 200 });
-  } catch (err: any) {
-    console.error("Unexpected error fetching exercise history:", err.message);
+  } catch (error: any) {
+    console.error("Unexpected error fetching exercise history:", error.message);
     return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
