@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await supabaseServer();
 
-    console.log("Fetching sets for record ID:", recordId);
 
     // Fetch sets associated with the given record ID
     const { data: sets, error } = await supabase
@@ -36,7 +35,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log("Fetched sets data:", sets);
 
     return NextResponse.json(sets, { status: 200 });
   } catch (error: any) {
@@ -63,8 +61,6 @@ export async function POST(request: NextRequest) {
   try {
     const { sets } = await request.json();
 
-    console.log("Incoming recordId:", recordId);
-    console.log("Incoming sets:", sets);
 
     // Validate that `sets` is an array and contains valid data
     if (!Array.isArray(sets) || sets.length === 0) {
@@ -92,7 +88,6 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    console.log("Validated setsData for insertion:", validatedSets);
 
     const supabase = await supabaseServer();
 
@@ -107,7 +102,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log("Inserted sets:", data);
 
     return NextResponse.json(
       { message: "Sets added successfully.", sets: data },

@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await supabaseServer();
 
-    console.log("Fetching recent record for exercise ID:", exerciseId);
 
     // Fetch the most recent exercise record for the given exerciseId
     const { data: recordData, error: recordError } = await supabase
@@ -53,7 +52,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: setsError.message }, { status: 400 });
     }
 
-    console.log("Fetched sets data:", setsData);
 
     return NextResponse.json(
       { created_at, sets: setsData || [] },

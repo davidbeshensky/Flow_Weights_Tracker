@@ -9,9 +9,7 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("Signup route accessed."); // Log route access
     const { email, password } = await req.json();
-    console.log("Received payload:", { email }); // Log the email payload
 
     if (!email || !password) {
       console.warn("Validation failed. Missing fields:", { email, password });
@@ -26,7 +24,6 @@ export async function POST(req: NextRequest) {
       password,
     });
 
-    console.log("Supabase response:", { data, signupError });
 
     if (signupError) {
       console.error("Supabase signup error:", signupError.message);
@@ -44,7 +41,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("Signup successful for user:", data.user.id);
 
     return NextResponse.json(
       { message: "User signed up successfully", userId: data.user.id },

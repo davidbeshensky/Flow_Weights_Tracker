@@ -64,7 +64,6 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
     fetchExerciseHistory();
   }, [exerciseId]);
 
-  // Calculate scatter data
   const scatterData = records.map((record) => {
     const totalReps = record.sets.reduce((sum, set) => sum + set.reps, 0);
     const totalWeight = record.sets.reduce(
@@ -85,7 +84,6 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
     };
   });
 
-  // Calculate volume data
   const volumeData = records.map((record) => {
     const totalReps = record.sets.reduce((sum, set) => sum + set.reps, 0);
 
@@ -94,6 +92,78 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
       y: totalReps,
     };
   });
+
+  const weightGraphProps = {
+    domainPadding: { x: 20, y: 20 },
+    children: [
+      <VictoryAxis
+        key="x-axis"
+        tickFormat={(t) => t}
+        style={{
+          tickLabels: { fill: "white", fontSize: 10 },
+          grid: { stroke: "#4a5568", opacity: 0.2 },
+        }}
+      />,
+      <VictoryAxis
+        key="y-axis"
+        dependentAxis
+        tickFormat={(t) => `${t.toFixed(1)} lbs`}
+        style={{
+          tickLabels: { fill: "white", fontSize: 10 },
+          grid: { stroke: "#4a5568", opacity: 0.2 },
+        }}
+      />,
+      <VictoryScatter
+        key="scatter"
+        data={scatterData}
+        size={({ datum }) => Math.sqrt(datum.size) * 2}
+        style={{ data: { fill: "#1E88E5" } }}
+        labels={({ datum }) =>
+          `Date: ${datum.x}\nAvg Weight: ${datum.y.toFixed(
+            1
+          )} lbs\nTotal Reps: ${datum.totalReps}`
+        }
+        labelComponent={<VictoryTooltip />}
+      />,
+      <VictoryLine
+        key="line"
+        data={scatterData}
+        style={{ data: { stroke: "#1E88E5", strokeWidth: 2 } }}
+      />,
+    ],
+  };
+
+  const volumeGraphProps = {
+    domainPadding: { x: 20, y: 20 },
+    children: [
+      <VictoryAxis
+        key="x-axis"
+        tickFormat={(t) => t}
+        style={{
+          tickLabels: { fill: "white", fontSize: 10 },
+          grid: { stroke: "#4a5568", opacity: 0.2 },
+        }}
+      />,
+      <VictoryAxis
+        key="y-axis"
+        dependentAxis
+        tickFormat={(t) => `${t.toFixed(1)} reps`}
+        style={{
+          tickLabels: { fill: "white", fontSize: 10 },
+          grid: { stroke: "#4a5568", opacity: 0.2 },
+        }}
+      />,
+      <VictoryBar
+        key="bar"
+        data={volumeData}
+        style={{ data: { fill: "#1E88E5" } }}
+        labels={({ datum }) =>
+          `Date: ${datum.x}\nVolume: ${datum.y.toFixed(1)} reps`
+        }
+        labelComponent={<VictoryTooltip />}
+      />,
+    ],
+  };
 
   return (
     <motion.div
@@ -115,7 +185,6 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
         <SkeletalExerciseHistory />
       ) : (
         <>
-          {/* Toggle Graph View */}
           <div className="flex justify-center gap-4 mb-6">
             <button
               onClick={() => setView("weightGraph")}
@@ -139,81 +208,12 @@ const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({
             </button>
           </div>
 
-          {/* Graphs */}
-          {records.length > 0 ? (
-            <div className="w-full p-6 bg-gray-800 rounded-lg shadow-lg mb-6">
-              {view === "weightGraph" && (
-                <VictoryChart domainPadding={{ x: 20, y: 20 }}>
-                  <VictoryAxis
-                    tickFormat={(t) => t}
-                    style={{
-                      tickLabels: { fill: "white", fontSize: 10 },
-                      grid: { stroke: "#4a5568", opacity: 0.2 },
-                    }}
-                  />
-                  <VictoryAxis
-                    dependentAxis
-                    tickFormat={(t) => `${t.toFixed(1)} lbs`}
-                    style={{
-                      tickLabels: { fill: "white", fontSize: 10 },
-                      grid: { stroke: "#4a5568", opacity: 0.2 },
-                    }}
-                  />
-                  <VictoryScatter
-                    data={scatterData}
-                    size={({ datum }) => Math.sqrt(datum.size) * 2}
-                    style={{ data: { fill: "#1E88E5" } }}
-                    labels={({ datum }) =>
-                      `Date: ${datum.x}\nAvg Weight: ${datum.y.toFixed(
-                        1
-                      )} lbs\nTotal Reps: ${datum.totalReps}`
-                    }
-                    labelComponent={<VictoryTooltip />}
-                  />
-                  <VictoryLine
-                    data={scatterData}
-                    style={{ data: { stroke: "#1E88E5", strokeWidth: 2 } }}
-                  />
-                </VictoryChart>
-              )}
-              {view === "volumeGraph" && (
-                <VictoryChart domainPadding={{ x: 20, y: 20 }}>
-                  <VictoryAxis
-                    tickFormat={(t) => t}
-                    style={{
-                      tickLabels: { fill: "white", fontSize: 10 },
-                      grid: { stroke: "#4a5568", opacity: 0.2 },
-                    }}
-                  />
-                  <VictoryAxis
-                    dependentAxis
-                    tickFormat={(t) => `${t.toFixed(1)} reps`}
-                    style={{
-                      tickLabels: { fill: "white", fontSize: 10 },
-                      grid: { stroke: "#4a5568", opacity: 0.2 },
-                    }}
-                  />
-                  <VictoryBar
-                    data={volumeData}
-                    style={{ data: { fill: "#1E88E5" } }}
-                    labels={({ datum }) =>
-                      `Date: ${datum.x}\nVolume: ${datum.y.toFixed(1)} reps`
-                    }
-                    labelComponent={<VictoryTooltip />}
-                  />
-                </VictoryChart>
-              )}
-            </div>
-          ) : (
-            <div className="w-full bg-gray-800 p-6 rounded-lg shadow-lg mb-6">
-              <p className="text-center text-gray-400">
-                Not enough data to display the chart. Add more records to see
-                trends over time!
-              </p>
-            </div>
-          )}
+          <div className="w-full p-6 bg-gray-800 rounded-lg shadow-lg mb-6">
+            {view === "weightGraph" && <VictoryChart {...weightGraphProps} />}
+            {view === "volumeGraph" && <VictoryChart {...volumeGraphProps} />}
+          </div>
 
-          {/* Historical Data */}
+          {/* Historical Results Section */}
           <div className="w-full bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-4">Past Results</h2>
             {records.length > 0 ? (

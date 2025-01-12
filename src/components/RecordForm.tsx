@@ -114,14 +114,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       const recordData = await recordRes.json();
       if (!recordRes.ok) throw new Error(recordData.error);
 
-      console.log("Created exercise record:", recordData);
-
       const recordId = recordData.id;
       if (!recordId) {
         throw new Error("Failed to retrieve exercise record ID.");
       }
 
-      console.log("Received recordId from first API call:", recordData.id);
       // Second API call: Add sets
       await handleAddSets(recordId); // Encapsulate this into another function
 
@@ -135,7 +132,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   const handleAddSets = async (recordId: string) => {
     try {
-      console.log("Sending sets for recordId:", recordId); // Debug log
 
       const setsRes = await fetch(`/api/records/${recordId}/sets`, {
         method: "POST",
@@ -146,7 +142,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       const setsData = await setsRes.json();
       if (!setsRes.ok) throw new Error(setsData.error);
 
-      console.log("Added sets successfully:", setsData);
     } catch (err: any) {
       console.error("Error adding sets:", err.message);
       throw err; // Re-throw to propagate the error if needed

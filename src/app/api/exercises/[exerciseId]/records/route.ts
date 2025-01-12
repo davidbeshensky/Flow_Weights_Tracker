@@ -17,7 +17,6 @@ export async function POST(req: NextRequest) {
   try {
     const { notes } = await req.json();
 
-    console.log("Creating exercise record for exercise ID:", exerciseId);
 
     const supabase = await supabaseServer();
 
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("Created exercise record:", record);
 
     return NextResponse.json(record, { status: 201 });
   } catch (error: any) {

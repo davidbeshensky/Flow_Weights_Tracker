@@ -5,7 +5,6 @@ export async function GET() {
     const supabase = await supabaseServer();
   
     try {
-      console.log("Initializing Supabase server...");
       const {
         data: { session },
         error: sessionError,
@@ -21,7 +20,6 @@ export async function GET() {
       }
   
       const userId = session.user.id;
-      console.log("User ID:", userId);
   
       const { data: exercises, error: queryError } = await supabase
         .from("exercises")
@@ -33,15 +31,12 @@ export async function GET() {
         return NextResponse.json({ error: queryError.message }, { status: 500 });
       }
   
-      console.log("Exercises data:", exercises);
   
       let totalWeight = 0;
   
       if (exercises) {
         for (const exercise of exercises) {
-          console.log("Processing exercise:", exercise);
           for (const record of exercise.exercise_records ?? []) {
-            console.log("Processing record:", record);
             if (
               Array.isArray(record.reps) &&
               Array.isArray(record.weights) &&
@@ -55,7 +50,6 @@ export async function GET() {
         }
       }
   
-      console.log("Total weight calculated:", totalWeight);
   
       return NextResponse.json({ totalWeight }, { status: 200 });
     } catch (err) {

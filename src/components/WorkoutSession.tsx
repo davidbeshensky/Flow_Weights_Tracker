@@ -20,7 +20,6 @@ const WorkoutSession: React.FC = () => {
     
 
   const confirmEndWorkout = async () => {
-    console.log("Confirming End Workout. Exercises:", exercises);
     setShowModal(false);
 
     if (workoutStarted) {
@@ -69,7 +68,6 @@ const WorkoutSession: React.FC = () => {
             throw new Error(
               `Error inserting workout exercise records: ${linkError.message}`
             );
-          console.log("Workout exercise records linked successfully!");
         } else {
           console.warn("No exercises found to link to the workout.");
         }
@@ -92,7 +90,6 @@ const WorkoutSession: React.FC = () => {
   const abortWorkout = () => {
     setShowAbortConfirm(false);
     setShowModal(false);
-    console.log("Workout aborted, no record saved."); // Log for debugging
     endWorkout(); // End the workout without saving
   };
 

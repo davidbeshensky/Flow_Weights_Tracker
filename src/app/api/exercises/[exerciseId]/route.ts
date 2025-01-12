@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await supabaseServer();
 
-    console.log("Fetching exercise data for ID:", exerciseId);
 
     // Fetch the exercise name from the "exercises" table
     const { data: exercise, error: exerciseError } = await supabase
@@ -39,7 +38,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log("Fetched exercise:", exercise);
 
     return NextResponse.json({ id: exerciseId, name: exercise.name }, { status: 200 });
   } catch (err: any) {

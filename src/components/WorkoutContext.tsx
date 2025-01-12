@@ -52,7 +52,6 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
     setShowSummary(false); // Ensure the summary is hidden at the start
     localStorage.setItem("workoutStarted", "true");
     localStorage.setItem("startTime", now.toISOString());
-    console.log("Workout started at:", now.toISOString());
   };
 
   // Ends the workout session
@@ -61,7 +60,6 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
     setStartTime(null);
     localStorage.removeItem("workoutStarted");
     localStorage.removeItem("startTime");
-    console.log("Workout ended.");
   };
 
   const addExerciseRecord = (record: AddExerciseRecordInput) => {
@@ -101,7 +99,6 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
   // Clears all exercise records (e.g., after saving or aborting a workout)
   const clearExerciseRecords = () => {
     setExercises([]);
-    console.log("Exercise records cleared.");
   };
 
   // Calculates the elapsed time during the workout
@@ -134,7 +131,6 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
     if (storedWorkoutStarted === "true" && storedStartTime) {
       setWorkoutStarted(true);
       setStartTime(new Date(storedStartTime));
-      console.log("Restored workout state from localStorage.");
     }
   }, []);
 

@@ -30,7 +30,6 @@ export default function LoginPage() {
 
       // On success, the server has set a cookie.
       // The user is now "logged in" from the server's perspective.
-      console.log("Login success, user:", data.user);
 
       // Optionally navigate to the main page or wherever
       router.push("/");

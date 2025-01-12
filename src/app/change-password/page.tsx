@@ -13,7 +13,6 @@ export default function ChangePassword() {
   const handlePasswordReset = async () => {
     setError(null);
     setSuccess(null);
-    console.log("Redirecting to:", `${window.location.origin}/reset-password`);
 
     try {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {

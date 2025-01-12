@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await supabaseServer();
 
-    console.log("Fetching exercise history for ID:", exerciseId);
 
     // Fetch all exercise records for the given exerciseId
     const { data: records, error: recordsError } = await supabase
@@ -61,7 +60,6 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    console.log("Fetched exercise history with sets:", recordsWithSets);
 
     return NextResponse.json(recordsWithSets, { status: 200 });
   } catch (error: any) {
