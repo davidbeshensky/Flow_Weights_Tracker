@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET(request: NextRequest) {
-  // Extract `exerciseId` from the request URL
-  const { pathname } = new URL(request.url);
-  const segments = pathname.split("/");
-  const exerciseId = segments[segments.indexOf("exercises") + 1]; // Extract `exerciseId` dynamically
+export async function GET(request: NextRequest, context: { params: { exerciseId: string } }) {
+  const { params } = context;
+  const exerciseId = params.exerciseId;
 
   if (!exerciseId) {
     return NextResponse.json(
