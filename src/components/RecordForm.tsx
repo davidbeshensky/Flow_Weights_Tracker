@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabaseClient } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import ExerciseHistory from "./ExerciseHistory";
 import { AnimatePresence } from "framer-motion";
@@ -13,12 +12,6 @@ import AddInformationModal from "./AddInformationModal";
 
 interface RecordFormProps {
   exerciseId: string;
-}
-
-interface ExerciseRecord {
-  reps: number[]; // Array of repetitions for each set
-  weights: number[]; // Array of weights for each set
-  created_at: string; // Timestamp when the record was created
 }
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
@@ -44,56 +37,25 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   const router = useRouter();
 
-  // Fetch exercise name and the most recent record for the exercise on component mount
   useEffect(() => {
     const fetchExerciseData = async () => {
-      setIsLoading(true);
       try {
-        const { data: exerciseData, error: exerciseError } = await supabaseClient
-          .from("exercises")
-          .select("name")
-          .eq("id", exerciseId)
-          .single();
+        const exerciseRes = await fetch(`/api/exercises/${exerciseId}`);
+        const exerciseData = await exerciseRes.json();
 
-        if (exerciseError) {
-          console.error("Error fetching exercise name:", exerciseError);
-          setError("Failed to load exercise data.");
-          return;
+        if (!exerciseRes.ok) throw new Error(exerciseData.error);
+        setExerciseName(exerciseData.name);
+
+        const recentRes = await fetch(`/api/exercises/${exerciseId}/recent`);
+        const recentData = await recentRes.json();
+
+        if (recentRes.ok) {
+          setRecentSets(recentData.sets || []);
+          setRecentSetsDate(recentData.created_at);
         }
-
-        if (exerciseData) {
-          setExerciseName(exerciseData.name);
-        }
-
-        const { data: recentData, error: recentError } = await supabaseClient
-          .from("exercise_records")
-          .select("reps, weights, created_at")
-          .eq("exercise_id", exerciseId)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (recentError) {
-          console.error("Error fetching recent sets:", recentError);
-          return;
-        }
-
-        if (recentData && recentData.length > 0) {
-          const { reps, weights, created_at } = recentData[0] as ExerciseRecord;
-          const setsData = reps.map((rep: number, index: number) => ({
-            reps: rep,
-            weight: weights[index],
-          }));
-          setRecentSets(setsData);
-          setRecentSetsDate(created_at);
-
-          if (setsData.length > 0) {
-            setReps(setsData[0].reps);
-            setWeight(setsData[0].weight);
-          }
-        }
-      } catch (err) {
-        console.error("Unexpected error fetching data:", err);
-        setError("An unexpected error occurred.");
+      } catch (err: any) {
+        console.error("Error fetching exercise data:", err.message);
+        setError(err.message || "An error occurred.");
       } finally {
         setIsLoading(false);
       }
@@ -129,31 +91,60 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     setError(null);
   };
 
+  // Submit the current workout
   const handleSubmit = async () => {
     if (sets.length === 0) {
       setError("Please add at least one set before submitting.");
       return;
     }
 
-    const repsArray = sets.map((set) => set.reps);
-    const weightsArray = sets.map((set) => set.weight);
+    try {
+      // First API call: Create the exercise record
+      const recordRes = await fetch(`/api/exercises/${exerciseId}/records`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes }),
+      });
 
-    const { error } = await supabaseClient.from("exercise_records").insert({
-      exercise_id: exerciseId,
-      reps: repsArray,
-      weights: weightsArray,
-      notes: notes || null,
-    });
+      const recordData = await recordRes.json();
+      if (!recordRes.ok) throw new Error(recordData.error);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSets([]);
-      setReps(null);
-      setWeight(null);
-      setNotes("");
-      setError(null);
-      router.push("/"); // Route to main page
+      console.log("Created exercise record:", recordData);
+
+      const recordId = recordData.id;
+      if (!recordId) {
+        throw new Error("Failed to retrieve exercise record ID.");
+      }
+
+      console.log("Received recordId from first API call:", recordData.id);
+      // Second API call: Add sets
+      await handleAddSets(recordId); // Encapsulate this into another function
+
+      // Reset the form on success
+      resetState();
+    } catch (err: any) {
+      console.error("Error during submission:", err.message);
+      setError(err.message || "An error occurred.");
+    }
+  };
+
+  const handleAddSets = async (recordId: string) => {
+    try {
+      console.log("Sending sets for recordId:", recordId); // Debug log
+
+      const setsRes = await fetch(`/api/records/${recordId}/sets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sets }), // Send sets as part of the request
+      });
+
+      const setsData = await setsRes.json();
+      if (!setsRes.ok) throw new Error(setsData.error);
+
+      console.log("Added sets successfully:", setsData);
+    } catch (err: any) {
+      console.error("Error adding sets:", err.message);
+      throw err; // Re-throw to propagate the error if needed
     }
   };
 

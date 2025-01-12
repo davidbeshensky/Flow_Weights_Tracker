@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getItem, setItem } from "@/lib/localStorageUtils";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+
 interface EditExerciseNameProps {
   exerciseId: string;
   currentName: string;
@@ -31,31 +33,32 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
     }
 
     try {
-      //updating in supabase
-      const { error, data } = await supabaseClient
+      // Update in Supabase
+      const { error } = await supabaseClient
         .from("exercises")
         .update({ name: newName.trim() })
         .eq("id", exerciseId);
 
-      console.log("Supabase update response:", { data, error });
       if (error) {
         setError("Failed to update exercise name.");
-      } else {
-        // Update localStorage cache
-        const cachedExercises = JSON.parse(
-          localStorage.getItem("exercises") || "[]"
-        );
+        return;
+      }
+
+      // Update localStorage cache
+      const cachedExercises = await getItem("exercises");
+      if (cachedExercises) {
         const updatedExercises = cachedExercises.map(
           (exercise: { id: string; name: string }) =>
             exercise.id === exerciseId
               ? { ...exercise, name: newName.trim() }
               : exercise
         );
-        localStorage.setItem("exercises", JSON.stringify(updatedExercises));
-        setIsEditing(false);
-        setError(null);
-        onUpdateName(newName.trim());
+        await setItem("exercises", updatedExercises);
       }
+
+      setIsEditing(false);
+      setError(null);
+      onUpdateName(newName.trim());
     } catch (err) {
       setError("An unexpected error occurred.");
       console.error("Error updating exercise name:", err);

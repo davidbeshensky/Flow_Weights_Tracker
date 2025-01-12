@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { getItem, setItem } from "@/lib/localStorageUtils";
 import Fuse from "fuse.js";
 import Link from "next/link";
 
@@ -19,13 +20,11 @@ const ExerciseSearchBar: React.FC = () => {
   // Load exercises from localStorage or fetch from the database
   useEffect(() => {
     const loadExercises = async () => {
-      const cachedExercises = JSON.parse(
-        localStorage.getItem("exercises") || "[]"
-      );
-      if (cachedExercises.length > 0) {
-        setExercises(cachedExercises);
-      } else {
-        try {
+      try {
+        const cachedExercises = await getItem("exercises");
+        if (cachedExercises && cachedExercises.length > 0) {
+          setExercises(cachedExercises);
+        } else {
           const { data: session, error: sessionError } =
             await supabaseClient.auth.getSession();
 
@@ -44,12 +43,13 @@ const ExerciseSearchBar: React.FC = () => {
             return;
           }
 
-          setExercises(data || []);
-          localStorage.setItem("exercises", JSON.stringify(data || []));
-        } catch (err) {
-          setError("An unexpected error occurred.");
-          console.error("Error fetching exercises:", err);
+          const exercisesData = data || [];
+          setExercises(exercisesData);
+          await setItem("exercises", exercisesData);
         }
+      } catch (err) {
+        setError("An unexpected error occurred.");
+        console.error("Error fetching exercises:", err);
       }
     };
 
@@ -99,7 +99,7 @@ const ExerciseSearchBar: React.FC = () => {
         const newExercise = data[0];
         const updatedExercises = [...exercises, newExercise];
         setExercises(updatedExercises);
-        localStorage.setItem("exercises", JSON.stringify(updatedExercises));
+        await setItem("exercises", updatedExercises);
 
         // Redirect to the new exercise
         window.location.href = `/exercises/${

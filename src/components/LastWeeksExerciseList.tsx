@@ -13,6 +13,8 @@ const ExerciseList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showRecentOnly, setShowRecentOnly] = useState(false);
 
+  const getStorageKey = (userId: string) => `exercises_${userId}`;
+
   // Fetch recent records for exercises
   const fetchRecentRecords = useCallback(async (exercises: Exercise[]) => {
     try {
@@ -35,7 +37,6 @@ const ExerciseList: React.FC = () => {
         return;
       }
 
-      // Determine exercises with recent activity
       const recentIds = new Set(
         records
           ?.filter((record) => new Date(record.created_at) >= oneWeekAgo)
@@ -66,10 +67,11 @@ const ExerciseList: React.FC = () => {
         return;
       }
 
+      const userId = session.session.user.id;
       const { data: exerciseData, error: exerciseError } = await supabaseClient
         .from("exercises")
         .select("id, name")
-        .eq("user_id", session.session.user.id);
+        .eq("user_id", userId);
 
       if (exerciseError) {
         console.error("Error fetching exercises:", exerciseError.message);
@@ -79,8 +81,8 @@ const ExerciseList: React.FC = () => {
 
       if (exerciseData) {
         setAllExercises(exerciseData);
-        localStorage.setItem("exercises", JSON.stringify(exerciseData));
-        fetchRecentRecords(exerciseData); // Fetch recent records in the background
+        localStorage.setItem(getStorageKey(userId), JSON.stringify(exerciseData));
+        fetchRecentRecords(exerciseData);
       }
     } catch (err) {
       console.error("Error fetching exercises:", err);
@@ -91,15 +93,28 @@ const ExerciseList: React.FC = () => {
 
   // Load exercises from localStorage
   useEffect(() => {
-    const cachedExercises = localStorage.getItem("exercises");
-    if (cachedExercises) {
-      const parsedExercises = JSON.parse(cachedExercises);
-      setAllExercises(parsedExercises);
-      setLoading(false);
-      fetchRecentRecords(parsedExercises); // Fetch recent records in the background
-    } else {
-      fetchExercises();
-    }
+    const loadExercises = async () => {
+      const { data: session } = await supabaseClient.auth.getSession();
+      if (!session?.session) {
+        setAllExercises([]);
+        setRecentExercises([]);
+        return;
+      }
+
+      const userId = session.session.user.id;
+      const cachedExercises = localStorage.getItem(getStorageKey(userId));
+
+      if (cachedExercises) {
+        const parsedExercises = JSON.parse(cachedExercises);
+        setAllExercises(parsedExercises);
+        setLoading(false);
+        fetchRecentRecords(parsedExercises);
+      } else {
+        fetchExercises();
+      }
+    };
+
+    loadExercises();
   }, [fetchExercises, fetchRecentRecords]);
 
   const displayedExercises = showRecentOnly ? recentExercises : allExercises;

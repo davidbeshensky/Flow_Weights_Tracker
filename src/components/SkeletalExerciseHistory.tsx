@@ -5,20 +5,8 @@ import React from "react";
 const SkeletalExerciseHistory: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-gray-900 text-white rounded-lg max-w-3xl mx-auto shadow-lg p-6 overflow-y-auto z-50 animate-pulse">
-      {/* Close Button */}
-      <div className="absolute top-4 right-4 w-8 h-8 bg-gray-700 rounded-full"></div>
-
-      {/* Title */}
-      <div className="h-8 bg-gray-700 rounded-md w-1/2 mx-auto mb-6"></div>
-
-      {/* Toggle Buttons */}
-      <div className="flex justify-center gap-4 mb-6">
-        <div className="h-10 w-32 bg-gray-700 rounded-lg"></div>
-        <div className="h-10 w-32 bg-gray-700 rounded-lg"></div>
-      </div>
-
       {/* Chart Placeholder */}
-      <div className="w-full p-6 bg-gray-800 rounded-lg shadow-lg mb-6">
+      <div className="w-full mt-24 p-6 bg-gray-800 rounded-lg shadow-lg mb-6">
         <div className="h-64 bg-gray-700 rounded-md"></div>
       </div>
 
