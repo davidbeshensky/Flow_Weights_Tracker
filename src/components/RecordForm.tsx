@@ -52,6 +52,11 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         if (recentRes.ok) {
           setRecentSets(recentData.sets || []);
           setRecentSetsDate(recentData.created_at);
+          // Autofill initial reps and weight from the first recent set
+          if (recentData.sets && recentData.sets.length > 0) {
+            setReps(recentData.sets[0].reps);
+            setWeight(recentData.sets[0].weight);
+          }
         }
       } catch (err: any) {
         console.error("Error fetching exercise data:", err.message);
