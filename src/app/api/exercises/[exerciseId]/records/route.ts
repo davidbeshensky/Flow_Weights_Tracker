@@ -1,11 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { exerciseId: string } }
-) {
-  const { exerciseId } = params;
+export async function POST(req: NextRequest) {
+  // Extract `exerciseId` from the request URL
+  const url = new URL(req.url);
+  const pathSegments = url.pathname.split("/");
+  const exerciseId = pathSegments[pathSegments.indexOf("exercises") + 1]; // Extract exerciseId dynamically
+
+  if (!exerciseId) {
+    return NextResponse.json(
+      { error: "exerciseId is required." },
+      { status: 400 }
+    );
+  }
 
   try {
     const { notes } = await req.json();
