@@ -1,8 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function GET(req: Request, { params }: { params: { exerciseId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { exerciseId: string } }
+) {
   const { exerciseId } = params;
+
+  if (!exerciseId) {
+    return NextResponse.json(
+      { error: "exerciseId is required" },
+      { status: 400 }
+    );
+  }
 
   try {
     const supabase = await supabaseServer();
@@ -18,7 +28,10 @@ export async function GET(req: Request, { params }: { params: { exerciseId: stri
 
     if (recordsError) {
       console.error("Error fetching exercise records:", recordsError.message);
-      return NextResponse.json({ error: recordsError.message }, { status: 400 });
+      return NextResponse.json(
+        { error: recordsError.message },
+        { status: 400 }
+      );
     }
 
     // If no records are found, return an empty array
