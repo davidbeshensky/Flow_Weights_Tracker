@@ -9,6 +9,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import SkeletalRecordForm from "./SkeletalRecordForm";
 import AddInformationModal from "./AddInformationModal";
+import { useWorkoutContext } from "@/components/WorkoutContext";
 
 interface RecordFormProps {
   exerciseId: string;
@@ -39,7 +40,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const handleOpenHistory = () => setShowHistory(true);
   const handleCloseHistory = () => setShowHistory(false);
   const [showAddInfoModal, setShowAddInfoModal] = useState(false);
-
+  const { addExerciseToWorkout, workoutStarted } = useWorkoutContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -147,6 +148,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     if (sets.length === 0) {
       setError("Please add at least one set before submitting.");
       return;
+    }
+  
+    if (workoutStarted && reps && weight && reps > 0 && weight > 0) {
+      addExerciseToWorkout({
+        exercise_id: exerciseId,
+        sets,
+      });
+      console.log("Exercise added to workout!");
     }
 
     try {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { WorkoutProvider } from "@/components/WorkoutContext";
 
 export const metadata: Metadata = {
   title: "Locked-In-Gains",
@@ -8,8 +9,18 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { rel: "icon", url: "/favicon.ico", sizes: "any" }, // Default favicon
-      { rel: "icon", url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
-      { rel: "icon", url: "/icon-96x96.png", sizes: "96x96", type: "image/png" },
+      {
+        rel: "icon",
+        url: "/icon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        rel: "icon",
+        url: "/icon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
       { rel: "apple-touch-icon", url: "/apple-icon.png", sizes: "180x180" }, // Apple icon
     ],
     apple: "/apple-icon.png", // Shortcut for Apple icon
@@ -43,8 +54,18 @@ export default function RootLayout({
 
         {/* Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" href="/icon-32x32.png" sizes="32x32" />
-        <link rel="icon" type="image/png" href="/icon-96x96.png" sizes="96x96" />
+        <link
+          rel="icon"
+          type="image/png"
+          href="/icon-32x32.png"
+          sizes="32x32"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          href="/icon-96x96.png"
+          sizes="96x96"
+        />
         <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
 
         {/* PWA Manifest */}
@@ -53,7 +74,9 @@ export default function RootLayout({
         {/* Optional SVG Favicon (if supported) */}
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
-      <body className="main-container">{children}</body>
+      <body className="main-container">
+        <WorkoutProvider>{children}</WorkoutProvider>
+      </body>
     </html>
   );
 }
