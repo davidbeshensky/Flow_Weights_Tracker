@@ -1,100 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useWorkoutContext } from "@/components/WorkoutContext";
-import { supabaseClient } from "@/lib/supabaseClient";
 
 const WorkoutSession: React.FC = () => {
-    const {
-        workoutStarted,
-        elapsedTime,
-        startWorkout,
-        endWorkout,
-        exercises,
-        setShowSummary,
-      } = useWorkoutContext();
-      const [showModal, setShowModal] = useState(false);
-      const [showAbortConfirm, setShowAbortConfirm] = useState(false);
-      const [rating, setRating] = useState<number>(5);
-      const [notes, setNotes] = useState<string>("");
-    
+  const { workoutStarted, elapsedTime, startWorkout, endWorkout } =
+    useWorkoutContext();
+  const [showModal, setShowModal] = useState(false);
+  const [rating, setRating] = useState<number>(5);
+  const [notes, setNotes] = useState<string>("");
 
-  const confirmEndWorkout = async () => {
+  // Log workoutStarted state whenever it changes
+  useEffect(() => {
+    console.log("Workout Started State:", workoutStarted);
+  }, [workoutStarted]);
+
+  const confirmEndWorkout = () => {
     setShowModal(false);
 
     if (workoutStarted) {
-      const endTime = new Date();
-      const startTime = localStorage.getItem("startTime");
-      let workoutSummary = null;
-
-      try {
-        const { data: session, error: sessionError } =
-          await supabaseClient.auth.getSession();
-        if (sessionError || !session?.session)
-          throw new Error("No valid user session found");
-
-        // Insert workout into the `workouts` table
-        const { data: workout, error: workoutError } = await supabaseClient
-          .from("workouts")
-          .insert([
-            {
-              user_id: session.session.user.id,
-              start_time: startTime,
-              end_time: endTime.toISOString(),
-              rating: rating,
-              notes: notes.trim() || null,
-            },
-          ])
-          .select()
-          .single();
-
-        if (workoutError)
-          throw new Error(`Error inserting workout: ${workoutError.message}`);
-        workoutSummary = workout;
-
-        if (exercises && exercises.length > 0) {
-          // Map exercises to `workout_exercise_records`
-          const workoutExerciseLinks = exercises.map((record) => ({
-            workout_id: workout.id,
-            exercise_record_id: record.exercise_record_id,
-          }));
-
-          // Insert into `workout_exercise_records`
-          const { error: linkError } = await supabaseClient
-            .from("workout_exercise_records")
-            .insert(workoutExerciseLinks);
-
-          if (linkError)
-            throw new Error(
-              `Error inserting workout exercise records: ${linkError.message}`
-            );
-        } else {
-          console.warn("No exercises found to link to the workout.");
-        }
-
-        // Store the workout summary and exercises in local storage
-        localStorage.setItem("workoutSummary", JSON.stringify(workoutSummary));
-        localStorage.setItem("workoutExercises", JSON.stringify(exercises));
-      } catch (error) {
-        console.error("Error saving workout and records:", error);
-      } finally {
-        // Clear exercise records after summary preparation
-        endWorkout(); // Reset context state
-        setShowSummary(true);
-      }
+      console.log("Workout ended:");
+      console.log("Rating:", rating);
+      console.log("Notes:", notes);
+      endWorkout();
     } else {
       console.warn("Workout not started. Nothing to end.");
     }
   };
 
-  const abortWorkout = () => {
-    setShowAbortConfirm(false);
-    setShowModal(false);
-    endWorkout(); // End the workout without saving
-  };
-
   return (
-    <div className="workout-session">
+    <div className="workout-session pt-4">
       {!workoutStarted ? (
         <button
           onClick={startWorkout}
@@ -160,38 +95,6 @@ const WorkoutSession: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowAbortConfirm(true)} // Open abort confirmation modal
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Abort
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Abort confirmation modal */}
-      {showAbortConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-gray-800 p-6 rounded-md text-center w-96">
-            <p className="text-white text-lg mb-4">
-              Are you sure you want to abort the workout? This will not save any
-              data.
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={abortWorkout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Yes, Abort
-              </button>
-              <button
-                onClick={() => setShowAbortConfirm(false)}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
               >
                 Cancel
