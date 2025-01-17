@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const upperBodyMuscles = [
   "biceps",
@@ -17,63 +16,47 @@ const upperBodyMuscles = [
 ];
 const lowerBodyMuscles = ["quadriceps", "hamstrings", "glutes", "calves"];
 
-// The shape returned by our Postgres function
-type MuscleSetsRow = {
-  muscle: string;
-  total_weighted_sets: number;
-};
-
 export default function WeeklySets() {
   const [setsPerGroup, setSetsPerGroup] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClientComponentClient();
-
-    (async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        // 1) Get the current user (if using auth-helpers session)
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user session found.");
+        // Fetch data from the `weekly-sets` endpoint
+        const response = await fetch("/api/weekly-sets");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
 
-        // 2) Call the Postgres function
-        //    This will run the WITH current_week ... query on the DB side
-        const { data, error: rpcError } = await supabase.rpc(
-          "get_weighted_sets_for_current_week",
-          {
-            p_user_id: user.id,
-          }
-        );
+        const data: Record<string, number> = await response.json();
 
-        if (rpcError) throw new Error(rpcError.message);
-
-        // 'data' should be an array of { muscle: string, total_sets: number }
-        // We'll map it into a dictionary so we can show each muscle from muscleOptions
+        // Initialize a map for all muscle groups
         const setsMap: Record<string, number> = {};
-        [...upperBodyMuscles, ...lowerBodyMuscles].forEach((m) => {
-          setsMap[m] = 0;
+        [...upperBodyMuscles, ...lowerBodyMuscles].forEach((muscle) => {
+          setsMap[muscle] = 0;
         });
 
-        (data ?? []).forEach((row: MuscleSetsRow) => {
-          // muscle in DB might be lowercased or differ; ensure we match keys properly
-          const mg = row.muscle?.toLowerCase();
-          if (setsMap[mg] !== undefined) {
-            setsMap[mg] = row.total_weighted_sets;
+        // Populate the setsMap with data from the API
+        Object.entries(data).forEach(([muscle, count]) => {
+          if (muscle in setsMap) {
+            setsMap[muscle] = count;
           }
         });
 
         setSetsPerGroup(setsMap);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "An unexpected error occurred"
+        );
       } finally {
         setLoading(false);
       }
-    })();
+    };
+
+    fetchData();
   }, []);
 
   if (loading) {
@@ -83,43 +66,34 @@ export default function WeeklySets() {
           Total Sets Per Muscle This Week
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Upper Body Section Skeleton */}
-          <div>
-            <h3 className="text-lg font-medium mb-2">Upper Body</h3>
-            <ul className="space-y-1">
-              {upperBodyMuscles.map((m, index) => (
-                <li
-                  key={`skeleton-upper-${index}`}
-                  className="flex justify-between border-b pb-1"
-                >
-                  <span className="capitalize w-1/2 h-4 bg-gray-300 rounded animate-pulse"></span>
-                  <span className="w-10 h-4 bg-gray-300 rounded animate-pulse"></span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Lower Body Section Skeleton */}
-          <div>
-            <h3 className="text-lg font-medium mb-2">Lower Body</h3>
-            <ul className="space-y-1">
-              {lowerBodyMuscles.map((m, index) => (
-                <li
-                  key={`skeleton-lower-${index}`}
-                  className="flex justify-between border-b pb-1"
-                >
-                  <span className="capitalize w-1/2 h-4 bg-gray-300 rounded animate-pulse"></span>
-                  <span className="w-10 h-4 bg-gray-300 rounded animate-pulse"></span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Skeleton Loader */}
+          {["Upper Body", "Lower Body"].map((section, index) => (
+            <div key={index}>
+              <h3 className="text-lg font-medium mb-2">{section}</h3>
+              <ul className="space-y-1">
+                {(section === "Upper Body"
+                  ? upperBodyMuscles
+                  : lowerBodyMuscles
+                ).map((m, idx) => (
+                  <li
+                    key={`skeleton-${m}-${idx}`}
+                    className="flex justify-between border-b pb-1"
+                  >
+                    <span className="capitalize w-1/2 h-4 bg-gray-300 rounded animate-pulse"></span>
+                    <span className="w-10 h-4 bg-gray-300 rounded animate-pulse"></span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
+  if (error) {
+    return <div style={{ color: "red" }}>Error: {error}</div>;
+  }
 
   return (
     <div className="p-4">
@@ -132,10 +106,10 @@ export default function WeeklySets() {
         <div>
           <h3 className="text-lg font-medium mb-2">Upper Body</h3>
           <ul className="space-y-1">
-            {upperBodyMuscles.map((m) => (
-              <li key={m} className="flex justify-between border-b pb-1">
-                <span className="capitalize">{m}</span>
-                <span>{setsPerGroup[m] ?? 0}</span>
+            {upperBodyMuscles.map((muscle) => (
+              <li key={muscle} className="flex justify-between border-b pb-1">
+                <span className="capitalize">{muscle}</span>
+                <span>{setsPerGroup[muscle] ?? 0}</span>
               </li>
             ))}
           </ul>
@@ -145,10 +119,10 @@ export default function WeeklySets() {
         <div>
           <h3 className="text-lg font-medium mb-2">Lower Body</h3>
           <ul className="space-y-1">
-            {lowerBodyMuscles.map((m) => (
-              <li key={m} className="flex justify-between border-b pb-1">
-                <span className="capitalize">{m}</span>
-                <span>{setsPerGroup[m] ?? 0}</span>
+            {lowerBodyMuscles.map((muscle) => (
+              <li key={muscle} className="flex justify-between border-b pb-1">
+                <span className="capitalize">{muscle}</span>
+                <span>{setsPerGroup[muscle] ?? 0}</span>
               </li>
             ))}
           </ul>

@@ -13,9 +13,15 @@ import AddInformationModal from "./AddInformationModal";
 interface RecordFormProps {
   exerciseId: string;
 }
+interface LocalData {
+  exerciseName: string;
+  sets: { reps: number; weight: number }[];
+  date: string;
+}
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [exerciseName, setExerciseName] = useState<string>("");
+  const [originalExerciseName, setOriginalExerciseName] = useState<string>("");
   const [isEditingSets, setIsEditingSets] = useState(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false); // Tracks if EditExerciseName is active
   const [reps, setReps] = useState<number | null>(null);
@@ -38,36 +44,77 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchExerciseData = async () => {
+    const fetchAndLoadData = async () => {
+      let localData: LocalData | undefined;
+
+      // Step 1: Attempt to load from local storage
       try {
-        const exerciseRes = await fetch(`/api/exercises/${exerciseId}`);
-        const exerciseData = await exerciseRes.json();
+        const storedData = localStorage.getItem(`${exerciseId}_recentSets`);
+        if (storedData) {
+          localData = JSON.parse(storedData);
+          console.log("Loaded data from local storage:", localData);
 
-        if (!exerciseRes.ok) throw new Error(exerciseData.error);
-        setExerciseName(exerciseData.name);
+          // Populate state with local storage data
+          setExerciseName(localData?.exerciseName || ""); // Defaults to empty string if missing
+          setOriginalExerciseName(localData?.exerciseName || "");
+          setRecentSets(localData?.sets || []);
+          setRecentSetsDate(localData?.date || "");
 
-        const recentRes = await fetch(`/api/exercises/${exerciseId}/recent`);
-        const recentData = await recentRes.json();
-
-        if (recentRes.ok) {
-          setRecentSets(recentData.sets || []);
-          setRecentSetsDate(recentData.created_at);
-          // Autofill initial reps and weight from the first recent set
-          if (recentData.sets && recentData.sets.length > 0) {
-            setReps(recentData.sets[0].reps);
-            setWeight(recentData.sets[0].weight);
+          if (localData?.sets && localData.sets?.length > 0) {
+            setReps(localData.sets[0].reps || 0);
+            setWeight(localData.sets[0].weight || 0);
           }
         }
-      } catch (err: any) {
-        console.error("Error fetching exercise data:", err.message);
-        setError(err.message || "An error occurred.");
-      } finally {
-        setIsLoading(false);
+      } catch (err) {
+        console.error("Error reading from local storage:", err);
       }
+
+      // Step 2: If no local data, fetch from the server
+      if (!localData) {
+        console.log("No local data found, fetching from server...");
+        try {
+          const exerciseRes = await fetch(`/api/exercises/${exerciseId}`);
+          const exerciseData = await exerciseRes.json();
+          if (!exerciseRes.ok) throw new Error(exerciseData.error);
+
+          const recentRes = await fetch(`/api/exercises/${exerciseId}/recent`);
+          const recentData = await recentRes.json();
+          if (!recentRes.ok) throw new Error(recentData.error);
+
+          // Populate state with fetched data
+          setExerciseName(exerciseData.name);
+          setOriginalExerciseName(exerciseData.name);
+          setRecentSets(recentData.sets || []);
+          setRecentSetsDate(recentData.created_at);
+
+          if (recentData.sets?.length > 0) {
+            setReps(recentData.sets[0].reps || 0);
+            setWeight(recentData.sets[0].weight || 0);
+          }
+
+          // Save fetched data to local storage
+          localStorage.setItem(
+            `${exerciseId}_recentSets`,
+            JSON.stringify({
+              exerciseName: exerciseData.name,
+              sets: recentData.sets || [],
+              date: recentData.created_at,
+            })
+          );
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            console.error("Error reading from server:", err.message);
+          } else {
+            console.error("Unknown error occurred:", err);
+          }
+        }
+      }
+
+      setIsLoading(false); // Ensure loading state is updated
     };
 
-    fetchExerciseData();
-  }, [exerciseId]);
+    fetchAndLoadData();
+  }, [exerciseId]); // Missing closing parentheses were added here
 
   const handleAddSet = () => {
     if (!reps || !weight) {
@@ -98,6 +145,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   // Submit the current workout
   const handleSubmit = async () => {
+    console.log("handlesubmit invoked");
     if (sets.length === 0) {
       setError("Please add at least one set before submitting.");
       return;
@@ -122,6 +170,22 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       // Second API call: Add sets
       await handleAddSets(recordId); // Encapsulate this into another function
 
+      // Save to localStorage
+      const date = new Date().toISOString();
+      localStorage.setItem(
+        `${exerciseId}_recentSets`,
+        JSON.stringify({
+          sets,
+          date,
+          exerciseName, // Save exerciseName
+        })
+      );
+
+      console.log("Data saved to localStorage:", {
+        sets,
+        date,
+        exerciseName,
+      });
       // Reset the form on success
       resetState();
     } catch (err: any) {
@@ -132,7 +196,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   const handleAddSets = async (recordId: string) => {
     try {
-
       const setsRes = await fetch(`/api/records/${recordId}/sets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,7 +204,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
       const setsData = await setsRes.json();
       if (!setsRes.ok) throw new Error(setsData.error);
-
     } catch (err: any) {
       console.error("Error adding sets:", err.message);
       throw err; // Re-throw to propagate the error if needed

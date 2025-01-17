@@ -44,6 +44,17 @@ const EditExerciseName: React.FC<EditExerciseNameProps> = ({
         return;
       }
 
+      // Update specific local storage key for this exercise
+      const storedData = localStorage.getItem(`${exerciseId}_recentSets`);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        parsedData.exerciseName = newName.trim(); // Update the name
+        localStorage.setItem(
+          `${exerciseId}_recentSets`,
+          JSON.stringify(parsedData)
+        );
+      }
+
       // Update localStorage cache
       const cachedExercises = await getItem("exercises");
       if (cachedExercises) {
