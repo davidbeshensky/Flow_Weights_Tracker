@@ -21,7 +21,6 @@ interface LocalData {
 
 const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [exerciseName, setExerciseName] = useState<string>("");
-  const [originalExerciseName, setOriginalExerciseName] = useState<string>("");
   const [isEditingSets, setIsEditingSets] = useState(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false); // Tracks if EditExerciseName is active
   const [reps, setReps] = useState<number | null>(null);
@@ -56,7 +55,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
           // Populate state with local storage data
           setExerciseName(localData?.exerciseName || ""); // Defaults to empty string if missing
-          setOriginalExerciseName(localData?.exerciseName || "");
+
           setRecentSets(localData?.sets || []);
           setRecentSetsDate(localData?.date || "");
 
@@ -83,7 +82,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
           // Populate state with fetched data
           setExerciseName(exerciseData.name);
-          setOriginalExerciseName(exerciseData.name);
           setRecentSets(recentData.sets || []);
           setRecentSetsDate(recentData.created_at);
 
