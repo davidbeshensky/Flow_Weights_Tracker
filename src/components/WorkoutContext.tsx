@@ -5,12 +5,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 // Type Definitions
 interface WorkoutExercise {
   exercise_id: string;
-  sets: { reps: number; weight: number }[];
+  sets: { reps: number; weight: number; exercise_set_record_id: string | null }[];
 }
 
 interface WorkoutContextType {
   workoutStarted: boolean;
   elapsedTime: string;
+  startTime: Date | null; // Add startTime to the context type
   workoutExercises: WorkoutExercise[];
   addExerciseToWorkout: (exercise: WorkoutExercise) => void;
   startWorkout: () => void;
@@ -25,7 +26,9 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
-  const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
+  const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>(
+    []
+  );
 
   // LocalStorage Keys
   const workoutStartedKey = "workoutStarted";
@@ -62,6 +65,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Add exercise to the workout
+  // Add exercise to the workout
   const addExerciseToWorkout = (exercise: WorkoutExercise) => {
     if (!workoutStarted) {
       console.warn("Cannot add exercises when workout is not started!");
@@ -75,9 +79,17 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (existingIndex !== -1) {
         // Merge sets with an existing exercise
+        const updatedSets = [
+          ...prev[existingIndex].sets,
+          ...exercise.sets.map((set) => ({
+            ...set,
+            exercise_set_record_id: set.exercise_set_record_id || null, // Ensure `exercise_set_record_id` is included
+          })),
+        ];
+
         const updatedExercise = {
           ...prev[existingIndex],
-          sets: [...prev[existingIndex].sets, ...exercise.sets],
+          sets: updatedSets,
         };
 
         const updatedExercises = [
@@ -86,13 +98,27 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
           ...prev.slice(existingIndex + 1),
         ];
 
-        localStorage.setItem(workoutExercisesKey, JSON.stringify(updatedExercises));
+        localStorage.setItem(
+          workoutExercisesKey,
+          JSON.stringify(updatedExercises)
+        );
         return updatedExercises;
       }
 
       // Add as a new exercise
-      const updatedExercises = [...prev, exercise];
-      localStorage.setItem(workoutExercisesKey, JSON.stringify(updatedExercises));
+      const newExercise = {
+        ...exercise,
+        sets: exercise.sets.map((set) => ({
+          ...set,
+          exercise_set_record_id: set.exercise_set_record_id || null, // Ensure `exercise_set_record_id` is included
+        })),
+      };
+
+      const updatedExercises = [...prev, newExercise];
+      localStorage.setItem(
+        workoutExercisesKey,
+        JSON.stringify(updatedExercises)
+      );
       return updatedExercises;
     });
   };
@@ -149,7 +175,8 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({
         addExerciseToWorkout,
         startWorkout,
         endWorkout,
-        elapsedTime
+        elapsedTime,
+        startTime,
       }}
     >
       {children}

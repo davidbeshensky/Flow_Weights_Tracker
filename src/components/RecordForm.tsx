@@ -144,76 +144,81 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
 
   // Submit the current workout
   const handleSubmit = async () => {
-    console.log("handlesubmit invoked");
+    console.log("handleSubmit invoked");
+
     if (sets.length === 0) {
       setError("Please add at least one set before submitting.");
       return;
     }
-  
-    if (workoutStarted && reps && weight && reps > 0 && weight > 0) {
-      addExerciseToWorkout({
-        exercise_id: exerciseId,
-        sets,
-      });
-      console.log("Exercise added to workout!");
-    }
 
     try {
-      // First API call: Create the exercise record
+      // Step 1: Create the exercise record
       const recordRes = await fetch(`/api/exercises/${exerciseId}/records`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ notes }), // Send additional metadata if needed
       });
 
       const recordData = await recordRes.json();
       if (!recordRes.ok) throw new Error(recordData.error);
 
-      const recordId = recordData.id;
+      const recordId = recordData.id; // Ensure the backend returns the new record ID
       if (!recordId) {
         throw new Error("Failed to retrieve exercise record ID.");
       }
 
-      // Second API call: Add sets
-      await handleAddSets(recordId); // Encapsulate this into another function
+      console.log("Record ID created:", recordId);
 
-      // Save to localStorage
+      // Step 2: Add sets to the exercise_set_records table
+      const setsRes = await fetch(`/api/records/${recordId}/sets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sets }),
+      });
+
+      const setsData = await setsRes.json();
+      if (!setsRes.ok) throw new Error(setsData.error);
+
+      // `setsData` should now include `exercise_set_record_id` for each set
+      const populatedSets = setsData.sets.map((set: any, index: number) => ({
+        reps: sets[index].reps, // Use original input reps
+        weight: sets[index].weight, // Use original input weight
+        exercise_set_record_id: set.id, // Use the ID returned by the backend
+      }));
+
+      console.log("Sets added:", populatedSets);
+
+      // Step 3: Add the populated sets to the WorkoutContext
+      if (workoutStarted) {
+        addExerciseToWorkout({
+          exercise_id: exerciseId,
+          sets: populatedSets,
+        });
+        console.log("Exercise added to workout with populated sets!");
+      }
+
+      // Save to localStorage for history purposes
       const date = new Date().toISOString();
       localStorage.setItem(
         `${exerciseId}_recentSets`,
         JSON.stringify({
-          sets,
+          sets: populatedSets,
           date,
-          exerciseName, // Save exerciseName
+          exerciseName,
         })
       );
 
       console.log("Data saved to localStorage:", {
-        sets,
+        sets: populatedSets,
         date,
         exerciseName,
       });
+
       // Reset the form on success
       resetState();
     } catch (err: any) {
       console.error("Error during submission:", err.message);
       setError(err.message || "An error occurred.");
-    }
-  };
-
-  const handleAddSets = async (recordId: string) => {
-    try {
-      const setsRes = await fetch(`/api/records/${recordId}/sets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sets }), // Send sets as part of the request
-      });
-
-      const setsData = await setsRes.json();
-      if (!setsRes.ok) throw new Error(setsData.error);
-    } catch (err: any) {
-      console.error("Error adding sets:", err.message);
-      throw err; // Re-throw to propagate the error if needed
     }
   };
 
