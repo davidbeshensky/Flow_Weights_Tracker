@@ -278,7 +278,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         </div>
       )}
       {/* Editable Exercise Name */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         {!isEditingName ? (
           <h1 className="text-3xl font-bold">{exerciseName || "Loading..."}</h1>
         ) : null}
@@ -294,7 +294,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       <div className="flex flex-inline">
         <button
           onClick={handleOpenHistory}
-          className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
+          className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-4"
         >
           View History
         </button>
@@ -312,7 +312,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         </AnimatePresence>
         <button
           onClick={() => setShowAddInfoModal(true)}
-          className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-6"
+          className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-4"
         >
           Add Information
         </button>
@@ -324,50 +324,55 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           />
         )}
       </div>
-      {/* Reps Input */}
-      <div className="mb-4">
-        <label
-          htmlFor="reps"
-          className="block text-sm font-medium text-gray-300"
+      <div className="border-solid border-t-2 border-gray-800 mb-2 w-full"></div>
+      <div className="flex flex-row gap-2">
+        {/* Reps Input */}
+        <div className="mb-4">
+          <label
+            htmlFor="reps"
+            className="block text-sm font-medium text-gray-400"
+          >
+            Reps
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            id="reps"
+            value={reps || ""}
+            onChange={(e) => setReps(Number(e.target.value))}
+            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
+            placeholder="Enter reps"
+          />
+        </div>
+        {/* Weight Input */}
+        <div className="mb-4">
+          <label
+            htmlFor="weight"
+            className="block text-sm font-medium text-gray-400"
+          >
+            Weight
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            id="weight"
+            value={weight || ""}
+            onChange={(e) => setWeight(Number(e.target.value))}
+            className="mt-1 block p-3 w-full bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
+            placeholder="Enter weight"
+          />
+        </div>
+        {/* Add Set Button */}
+        <button
+          onClick={handleAddSet}
+          className="bg-blue-600 mt-6 text-white font-medium rounded-md shadow-md hover:bg-blue-700 transition-all mb-4 h-12 px-4 flex items-center justify-center"
         >
-          Reps
-        </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          id="reps"
-          value={reps || ""}
-          onChange={(e) => setReps(Number(e.target.value))}
-          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none"
-          placeholder="Enter reps"
-        />
+          Add Set
+        </button>
       </div>
-      {/* Weight Input */}
-      <div className="mb-4">
-        <label
-          htmlFor="weight"
-          className="block text-sm font-medium text-gray-300"
-        >
-          Weight
-        </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          id="weight"
-          value={weight || ""}
-          onChange={(e) => setWeight(Number(e.target.value))}
-          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none"
-          placeholder="Enter weight (lbs)"
-        />
-      </div>
-      <button
-        onClick={handleAddSet}
-        className="w-full py-3 bg-blue-600 text-white font-medium rounded-md shadow-md hover:bg-blue-700 transition-all mb-6"
-      >
-        Add Set
-      </button>
+
       <div className="flex">
         {/* Previous results */}
         {recentSets.length > 0 && (
@@ -382,13 +387,15 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                   })
                 : "Unknown Date"}
             </h4>
-            <ul className="space-y-2">
+            <ul className="rounded-md bg-gray-800">
               {recentSets.map((set, index) => (
-                <li
-                  key={index}
-                  className="p-3 bg-gray-800 rounded-md shadow-md"
-                >
-                  S-{index + 1}: ({set.reps}, {set.weight})
+                <li key={index} className="p-1">
+                  <div className="text-sm font-medium text-gray-400">
+                    Set {index + 1}
+                  </div>
+                  <div>
+                    {set.reps} reps x {set.weight} lbs
+                  </div>
                 </li>
               ))}
             </ul>
@@ -406,74 +413,87 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                 {isEditingSets ? <CheckIcon /> : <EditIcon fontSize="medium" />}
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="bg-gray-800 rounded-md">
               {sets.map((set, index) => (
-                <li
-                  key={index}
-                  className="p-3 bg-gray-800 rounded-md shadow-md flex items-center justify-between"
-                >
+                <li key={index} className="p-1">
                   {isEditingSets ? (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <label className="text-sm text-gray-300">Reps:</label>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={set.reps}
-                          onChange={(e) =>
-                            handleEditSets(
-                              index,
-                              "reps",
-                              Number(e.target.value)
-                            )
-                          }
-                          className="mr-1 text-center w-8 bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
-                        />
+                    <div className="flex flex-col">
+                      <div className="text-sm font-medium text-gray-400">
+                        Set {index + 1}
                       </div>
-                      <div className="flex items-center gap-1 ml-1">
-                        <label className="text-sm text-gray-300">Lbs:</label>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={set.weight}
-                          onChange={(e) =>
-                            handleEditSets(
-                              index,
-                              "weight",
-                              Number(e.target.value)
-                            )
-                          }
-                          className="w-8 text-center bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
-                        />
+                      <div className="flex">
+                        <div className="flex items-center gap-1">
+                          <label className="text-sm text-gray-300">Reps:</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={set.reps}
+                            onChange={(e) =>
+                              handleEditSets(
+                                index,
+                                "reps",
+                                Number(e.target.value)
+                              )
+                            }
+                            className="mr-1 text-center w-8 bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1 ml-1">
+                          <label className="text-sm text-gray-300">lbs:</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={set.weight}
+                            onChange={(e) =>
+                              handleEditSets(
+                                index,
+                                "weight",
+                                Number(e.target.value)
+                              )
+                            }
+                            className="w-8 text-center bg-gray-700 text-white rounded-md focus:ring-2 focus:ring-blue-600"
+                          />
+                        </div>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <>
-                      S-{index + 1}: ({set.reps}, {set.weight})
+                      <div className="flex justify-between text-sm font-medium text-gray-400">
+                        Set {index + 1}
+                        <div>
+                          {!isEditingSets && (
+                            <button
+                              onClick={() => handleDeleteSet(index)}
+                              className="bg-transparent rounded-md hover:text-red-500 focus:ring-2 focus:ring-red-500"
+                            >
+                              ✖
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div>
+                          {set.reps} reps x {set.weight} lbs
+                        </div>
+                      </div>
                     </>
                   )}
                   {/* Delete Button */}
-                  {!isEditingSets && (
-                    <button
-                      onClick={() => handleDeleteSet(index)}
-                      className="bg-transparent rounded-md hover:text-red-500 focus:ring-2 focus:ring-red-500"
-                    >
-                      ✖
-                    </button>
-                  )}
                 </li>
               ))}
             </ul>
           </div>
         )}
       </div>
+      <div className="border-solid border-t-2 border-gray-800 mb-2 w-full mt-4"></div>
+
       {/* Notes Input */}
-      <div className="mt-6 mb-6">
+      <div className="mt-4 mb-6">
         <label
           htmlFor="notes"
-          className="block text-sm font-medium text-gray-300"
+          className="block text-sm font-medium text-gray-400"
         >
           Notes (Optional)
         </label>

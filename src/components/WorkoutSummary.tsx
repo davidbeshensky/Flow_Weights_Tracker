@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useWorkoutContext } from "./WorkoutContext";
+import { supabaseClient } from "@/lib/supabaseClient";
 
 interface WorkoutSummaryProps {
   exercises: {
@@ -18,6 +19,60 @@ const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   onClose,
 }) => {
   const { endWorkout } = useWorkoutContext();
+  const [exerciseDetails, setExerciseDetails] = useState<
+    {
+      name: string;
+      exercise_id: string;
+      sets: { reps: number; weight: number }[];
+    }[]
+  >([]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error("Error fetching session:", error.message);
+        return;
+      }
+
+      if (session?.user) {
+        setUserId(session.user.id); // Save the user ID
+      } else {
+        console.warn("No user session found.");
+      }
+    };
+
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const storedExercises = localStorage.getItem(`exercises_${userId}`);
+    if (storedExercises) {
+      const parsedExercises = JSON.parse(storedExercises);
+
+      // Map workout exercises to include exercise names
+      const updatedDetails = exercises.map((exercise) => {
+        const matchedExercise = parsedExercises.find(
+          (e: { id: string }) => e.id === exercise.exercise_id
+        );
+        return {
+          exercise_id: exercise.exercise_id,
+          name: matchedExercise?.name || "Unknown Exercise", // Fallback if name isn't found
+          sets: exercise.sets,
+        };
+      });
+
+      setExerciseDetails(updatedDetails);
+    }
+  }, [exercises, userId]);
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
       <div className="relative p-6 bg-gray-900 text-white rounded-lg max-w-3xl mx-auto shadow-lg">
@@ -44,18 +99,16 @@ const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           <p className="text-lg">{notes || "No notes provided."}</p>
         </div>
 
-        {exercises.length > 0 ? (
+        {exerciseDetails.length > 0 ? (
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Exercises</h2>
             <ul className="space-y-4">
-              {exercises.map((exercise, index) => (
+              {exerciseDetails.map((exercise) => (
                 <li
-                  key={index}
+                  key={exercise.exercise_id}
                   className="p-4 bg-gray-800 rounded-md shadow-md"
                 >
-                  <h3 className="text-lg font-bold mb-2">
-                    Exercise {index + 1}
-                  </h3>
+                  <h3 className="text-lg font-bold mb-2">{exercise.name}</h3>
                   <ul className="space-y-2">
                     {exercise.sets.map((set, setIndex) => (
                       <li key={setIndex} className="flex justify-between">
@@ -79,7 +132,43 @@ const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         )}
 
         <button
-          onClick={() => alert("Save to presets coming soon!")} // Placeholder functionality
+          onClick={async () => {
+            const presetName = prompt("Enter a name for this workout preset:");
+            if (!presetName) {
+              alert("Preset name is required.");
+              return;
+            }
+
+            const description =
+              prompt("Add a description for the preset (optional):") || "";
+
+            const exercisesPayload = exercises.map((exercise) => ({
+              exercise_id: exercise.exercise_id,
+            }));
+
+            try {
+              const response = await fetch("/api/presets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: presetName,
+                  description,
+                  exercises: exercisesPayload,
+                }),
+              });
+
+              const result = await response.json();
+
+              if (!response.ok) {
+                throw new Error(result.error);
+              }
+
+              alert("Workout preset saved successfully!");
+            } catch (error: any) {
+              console.error("Error saving preset:", error.message);
+              alert("Failed to save workout preset.");
+            }
+          }}
           className="w-full py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-all"
         >
           Save Workout to Presets
