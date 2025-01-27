@@ -141,31 +141,21 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setError("Both reps and weight are required to add a set.");
       return;
     }
-
+  
+    // Add the current set to the sets array with the rest time included
     setSets((prev) => [...prev, { reps, weight, restTime: timeElapsed }]);
-
-    const nextSetIndex = sets.length + 1;
-
-    // Autofill the next set with data from recentSets
-    if (recentSets.length > 0) {
-      const nextSet =
-        nextSetIndex < recentSets.length
-          ? recentSets[nextSetIndex]
-          : recentSets[recentSets.length - 1]; // Repeat the last set
-      setReps(nextSet.reps);
-      setWeight(nextSet.weight);
-    } else {
-      //default behavior if no sbsequent past records exist.
-      setReps(reps);
-      setWeight(weight);
-    }
-
-    // Reset the timer
+  
+    // For the next set, default to the current set's values
+    setReps(reps);
+    setWeight(weight);
+  
+    // Reset the timer for the next set
     setTimeElapsed(0);
     setTimerActive(true);
+  
     setError(null);
   };
-
+  
   // Submit the current workout
   const handleSubmit = async () => {
     console.log("handleSubmit invoked");
