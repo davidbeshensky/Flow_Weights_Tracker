@@ -14,7 +14,7 @@ const DashboardButton: React.FC = () => {
   return (
     <button
       onClick={handleGoToDash}
-      className="w-full py-2 px-1 mb-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg"
+      className="w-full py-2 px-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg"
     >
       Dashboard
     </button>

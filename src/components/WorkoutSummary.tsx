@@ -74,7 +74,7 @@ const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   }, [exercises, userId]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+    <div className="overflow-auto fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
       <div className="relative p-6 bg-gray-900 text-white rounded-lg max-w-3xl mx-auto shadow-lg">
         {/* Close Button */}
         <button

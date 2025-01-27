@@ -2,61 +2,25 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 
-interface Exercise {
+interface WorkoutPresetExercise {
+  exercise_id: string;
+  exercises: { name: string }[]; // Array of objects
+}
+
+interface Preset {
   id: string;
   name: string;
+  workout_preset_exercises: WorkoutPresetExercise[];
 }
 
 const ExerciseList: React.FC = () => {
-  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
-  const [recentExercises, setRecentExercises] = useState<Exercise[]>([]);
+  const [starredPresets, setStarredPresets] = useState<Preset[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showRecentOnly, setShowRecentOnly] = useState(false);
 
-  const getStorageKey = (userId: string) => `exercises_${userId}`;
-
-  // Fetch recent records for exercises
-  const fetchRecentRecords = useCallback(async (exercises: Exercise[]) => {
-    try {
-      const { data: session } = await supabaseClient.auth.getSession();
-      if (!session?.session) return;
-
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const { data: records, error } = await supabaseClient
-        .from("exercise_records")
-        .select("exercise_id, created_at")
-        .in(
-          "exercise_id",
-          exercises.map((exercise) => exercise.id)
-        );
-
-      if (error) {
-        console.error("Error fetching records:", error.message);
-        return;
-      }
-
-      const recentIds = new Set(
-        records
-          ?.filter((record) => new Date(record.created_at) >= oneWeekAgo)
-          .map((record) => record.exercise_id)
-      );
-
-      const recentExercises = exercises.filter((exercise) =>
-        recentIds.has(exercise.id)
-      );
-
-      setRecentExercises(recentExercises);
-    } catch (err) {
-      console.error("Error fetching recent records:", err);
-    }
-  }, []);
-
-  // Fetch exercises from Supabase
-  const fetchExercises = useCallback(async () => {
+  // Fetch starred presets from Supabase
+  const fetchStarredPresets = useCallback(async () => {
     setLoading(true);
-
     try {
       const { data: session, error: sessionError } =
         await supabaseClient.auth.getSession();
@@ -68,75 +32,83 @@ const ExerciseList: React.FC = () => {
       }
 
       const userId = session.session.user.id;
-      const { data: exerciseData, error: exerciseError } = await supabaseClient
-        .from("exercises")
-        .select("id, name")
-        .eq("user_id", userId);
 
-      if (exerciseError) {
-        console.error("Error fetching exercises:", exerciseError.message);
+      const { data: presetData, error: presetError } = await supabaseClient
+        .from("workout_presets")
+        .select(
+          `
+          id,
+          name,
+          workout_preset_exercises (
+            exercise_id,
+            exercises (
+              name
+            )
+          )
+        `
+        )
+        .eq("user_id", userId)
+        .eq("starred", true);
+
+      if (presetError) {
+        console.error("Error fetching presets:", presetError.message);
         setLoading(false);
         return;
       }
 
-      if (exerciseData) {
-        setAllExercises(exerciseData);
-        localStorage.setItem(getStorageKey(userId), JSON.stringify(exerciseData));
-        fetchRecentRecords(exerciseData);
-      }
+      setStarredPresets(presetData || []);
     } catch (err) {
-      console.error("Error fetching exercises:", err);
+      console.error("Error fetching starred presets:", err);
     } finally {
       setLoading(false);
     }
-  }, [fetchRecentRecords]);
+  }, []);
 
-  // Load exercises from localStorage
   useEffect(() => {
-    const loadExercises = async () => {
-      const { data: session } = await supabaseClient.auth.getSession();
-      if (!session?.session) {
-        setAllExercises([]);
-        setRecentExercises([]);
-        return;
-      }
+    fetchStarredPresets();
+  }, [fetchStarredPresets]);
 
-      const userId = session.session.user.id;
-      const cachedExercises = localStorage.getItem(getStorageKey(userId));
+  // Load selected preset from local storage on initial load
+  useEffect(() => {
+    const storedPreset = localStorage.getItem("selectedPreset");
+    if (storedPreset) {
+      const parsedPreset = JSON.parse(storedPreset);
+      setSelectedPreset(parsedPreset);
+    }
+  }, []);
 
-      if (cachedExercises) {
-        const parsedExercises = JSON.parse(cachedExercises);
-        setAllExercises(parsedExercises);
-        setLoading(false);
-        fetchRecentRecords(parsedExercises);
-      } else {
-        fetchExercises();
-      }
-    };
-
-    loadExercises();
-  }, [fetchExercises, fetchRecentRecords]);
-
-  const displayedExercises = showRecentOnly ? recentExercises : allExercises;
+  // Function to select a preset and save it to local storage
+  const selectPreset = (preset: Preset) => {
+    setSelectedPreset(preset);
+    localStorage.setItem("selectedPreset", JSON.stringify(preset));
+  };
 
   if (loading) {
     return (
       <div className="mt-4">
         <h3 className="text-lg font-bold text-white mb-2">
-          Loading exercises...
+          Loading presets...
         </h3>
         <p className="text-gray-400">Loading...</p>
       </div>
     );
   }
 
-  if (allExercises.length === 0) {
+  if (!selectedPreset) {
     return (
-      <div className="mt-4 text-center text-gray-400">
-        <h3 className="text-lg font-bold text-white mb-2">
-          No Exercises Found
-        </h3>
-        <p>Start tracking your workouts to see them here!</p>
+      <div className="mt-4">
+        <h3 className="text-lg font-bold text-white mb-4">Starred Presets</h3>
+        <div className="flex flex-row gap-2">
+          {starredPresets.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => selectPreset(preset)}
+              className="block bg-blue-600 text-white rounded-md px-4 py-2 hover:bg-blue-700"
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -144,22 +116,29 @@ const ExerciseList: React.FC = () => {
   return (
     <div className="mt-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-white">Your Exercises</h3>
+        <h3 className="text-lg font-bold text-white">
+          Exercises in {selectedPreset.name}
+        </h3>
         <button
-          onClick={() => setShowRecentOnly((prev) => !prev)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          onClick={() => {
+            setSelectedPreset(null);
+            localStorage.removeItem("selectedPreset"); // Clear local storage when deselecting
+          }}
+          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
         >
-          {showRecentOnly ? "Show All" : "Show Recent"}
+          Back to Presets
         </button>
       </div>
       <ul className="space-y-1">
-        {displayedExercises.map((exercise) => (
-          <li key={exercise.id}>
+        {selectedPreset.workout_preset_exercises.map((exercise) => (
+          <li key={exercise.exercise_id}>
             <Link
-              href={`/exercises/${exercise.id}`}
+              href={`/exercises/${exercise.exercise_id}`}
               className="block bg-gray-700 rounded-md py-1 my-1 text-white hover:text-blue-500"
             >
-              <div className="px-2">{exercise.name}</div>
+              <div className="px-2">
+                {(exercise.exercises as any).name || "Unnamed Exercise"}
+              </div>
             </Link>
           </li>
         ))}

@@ -80,3 +80,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const supabase = await supabaseServer();
+
+    // Get the user session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (!session || sessionError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user_id = session.user.id;
+
+    // Fetch all presets with their exercises
+    const { data, error } = await supabase
+      .from("workout_presets")
+      .select(`
+        id,
+        name,
+        description,
+        starred,
+        workout_preset_exercises (
+          order,
+          exercise_id,
+          exercises (
+            name
+          )
+        )
+      `)
+      .eq("user_id", user_id);
+
+    if (error) {
+      console.error("Error fetching presets:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+
+    console.error("Error fetching presets:", errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
+
+

@@ -6,6 +6,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import SignOutButton from "./SignOutButton";
 import DashboardButton from "./DashboardButton";
+import PresetEditor from "./PresetEditor"; // Import the PresetEditor component
 
 // Define the MUI theme
 const theme = createTheme({
@@ -47,6 +48,7 @@ const theme = createTheme({
 
 const MenuWithCustomStyles: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isEditorVisible, setIsEditorVisible] = useState(false); // Track PresetEditor visibility
   const open = Boolean(anchorEl);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -55,6 +57,15 @@ const MenuWithCustomStyles: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleEditorOpen = () => {
+    setIsEditorVisible(true);
+    handleMenuClose(); // Close the menu when opening the editor
+  };
+
+  const handleEditorClose = () => {
+    setIsEditorVisible(false);
   };
 
   return (
@@ -82,11 +93,22 @@ const MenuWithCustomStyles: React.FC = () => {
             horizontal: "right",
           }}
         >
-          <MenuItem className="flex flex-col" onClick={handleMenuClose}>
+          <MenuItem className="flex flex-col gap-2">
             <DashboardButton />
+            <button
+              onClick={handleEditorOpen}
+              className="text-left bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
+            >
+              Preset Editor
+            </button>
             <SignOutButton />
           </MenuItem>
         </Menu>
+
+        {/* PresetEditor Overlay */}
+        {isEditorVisible && (
+          <PresetEditor closeEditor={handleEditorClose} />
+        )}
       </div>
     </ThemeProvider>
   );

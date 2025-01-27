@@ -26,7 +26,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [isEditingName, setIsEditingName] = useState<boolean>(false); // Tracks if EditExerciseName is active
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
-  const [sets, setSets] = useState<{ reps: number; weight: number }[]>([]);
+  const [sets, setSets] = useState<{ reps: number; weight: number, restTime: number }[]>([]);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -41,7 +41,28 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const handleCloseHistory = () => setShowHistory(false);
   const [showAddInfoModal, setShowAddInfoModal] = useState(false);
   const { addExerciseToWorkout, workoutStarted } = useWorkoutContext();
+  const [timeElapsed, setTimeElapsed] = useState(0); // Timer state
+  const [timerActive, setTimerActive] = useState(false); // To control the timer
   const router = useRouter();
+
+  // Helper function to format time in mm:ss
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    // Start the timer on component mount
+    setTimerActive(true);
+    const interval = setInterval(() => {
+      if (timerActive) setTimeElapsed((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [timerActive]);
 
   useEffect(() => {
     const fetchAndLoadData = async () => {
@@ -121,7 +142,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       return;
     }
 
-    setSets((prev) => [...prev, { reps, weight }]);
+    setSets((prev) => [...prev, { reps, weight, restTime: timeElapsed }]);
 
     const nextSetIndex = sets.length + 1;
 
@@ -139,6 +160,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setWeight(weight);
     }
 
+    // Reset the timer
+    setTimeElapsed(0);
+    setTimerActive(true);
     setError(null);
   };
 
@@ -168,7 +192,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       }
 
       console.log("Record ID created:", recordId);
-
+      console.log("sets",sets);
       // Step 2: Add sets to the exercise_set_records table
       const setsRes = await fetch(`/api/records/${recordId}/sets`, {
         method: "POST",
@@ -325,6 +349,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         )}
       </div>
       <div className="border-solid border-t-2 border-gray-800 mb-2 w-full"></div>
+      {/* Timer Display */}
+      <div className="text-lg justify-center flex font-medium mb-4">
+        <span className="text-white">{formatTime(timeElapsed)}</span>
+      </div>
       <div className="flex flex-row gap-2">
         {/* Reps Input */}
         <div className="mb-4">

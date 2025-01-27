@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
     const validatedSets = sets.map((set: any, index: number) => {
       if (
         typeof set.reps !== "number" ||
-        (typeof set.weight !== "number" && set.weight !== null)
+        (typeof set.weight !== "number" && set.weight !== null) ||
+        (typeof set.restTime !== "number" && set.restTime !== null)
       ) {
         throw new Error(
           "Each set must have valid `reps` (integer) and `weight` (number or null)."
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
         set_number: index + 1, // Position in the array
         reps: set.reps, // Required
         weight: set.weight || null, // Allow null for weight
+        rest_time: set.restTime || null, // Include rest time
       };
     });
 
