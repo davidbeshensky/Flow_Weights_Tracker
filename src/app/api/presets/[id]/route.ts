@@ -1,10 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const { id } = params; // Extract the dynamic route parameter
-  if (!id) {
-    return NextResponse.json({ error: "Preset ID is required." }, { status: 400 });
+function extractPresetIdFromPathname(pathname: string): string | null {
+  const segments = pathname.split("/"); // Split the pathname into parts
+  const presetIdIndex = segments.indexOf("presets") + 1; // Find the index of "presets"
+  return segments[presetIdIndex] || null; // Return the next segment as presetId
+}
+
+export async function PATCH(request: NextRequest) {
+  const { pathname } = new URL(request.url);
+  const presetId = extractPresetIdFromPathname(pathname);
+
+  if (!presetId) {
+    console.error("Missing presetId in URL pathname:", pathname);
+    return NextResponse.json(
+      { error: "Preset ID is required." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -18,24 +30,23 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       );
     }
 
-    const supabase = supabaseServer();
-    const { data, error } = await (await supabase)
+    const supabase = await supabaseServer();
+    const { data, error } = await supabase
       .from("workout_presets")
       .update({ starred })
-      .eq("id", id)
+      .eq("id", presetId)
       .select();
 
     if (error) {
-      return NextResponse.json(
-        { error: "Failed to update preset." },
-        { status: 500 }
-      );
+      console.error("Error updating preset:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
+    console.error("Unexpected error updating preset:", error.message);
     return NextResponse.json(
-      { error: error.message || "Internal Server Error." },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
