@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
+import PresetEditor from "./PresetEditor";
 
 interface WorkoutPresetExercise {
   exercise_id: string;
-  exercises: { name: string }[]; // Array of objects
+  exercises: { name: string }[];
 }
 
 interface Preset {
@@ -17,23 +18,20 @@ const ExerciseList: React.FC = () => {
   const [starredPresets, setStarredPresets] = useState<Preset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
 
-  // Fetch starred presets from Supabase
   const fetchStarredPresets = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: session, error: sessionError } =
-        await supabaseClient.auth.getSession();
-
-      if (sessionError || !session?.session) {
+      const { data: session } = await supabaseClient.auth.getSession();
+      if (!session?.session) {
         console.error("No valid session found.");
-        setLoading(false);
         return;
       }
 
       const userId = session.session.user.id;
 
-      const { data: presetData, error: presetError } = await supabaseClient
+      const { data: presetData, error } = await supabaseClient
         .from("workout_presets")
         .select(
           `
@@ -50,15 +48,10 @@ const ExerciseList: React.FC = () => {
         .eq("user_id", userId)
         .eq("starred", true);
 
-      if (presetError) {
-        console.error("Error fetching presets:", presetError.message);
-        setLoading(false);
-        return;
-      }
-
+      if (error) throw error;
       setStarredPresets(presetData || []);
     } catch (err) {
-      console.error("Error fetching starred presets:", err);
+      console.error("Error fetching presets:", err);
     } finally {
       setLoading(false);
     }
@@ -68,47 +61,57 @@ const ExerciseList: React.FC = () => {
     fetchStarredPresets();
   }, [fetchStarredPresets]);
 
-  // Load selected preset from local storage on initial load
   useEffect(() => {
-    const storedPreset = localStorage.getItem("selectedPreset");
-    if (storedPreset) {
-      const parsedPreset = JSON.parse(storedPreset);
-      setSelectedPreset(parsedPreset);
+    if (typeof window !== "undefined") {
+      const storedPreset = localStorage.getItem("selectedPreset");
+      if (storedPreset) {
+        setSelectedPreset(JSON.parse(storedPreset));
+      }
     }
   }, []);
 
-  // Function to select a preset and save it to local storage
   const selectPreset = (preset: Preset) => {
     setSelectedPreset(preset);
     localStorage.setItem("selectedPreset", JSON.stringify(preset));
   };
 
+  const handleEditorOpen = () => setIsEditorVisible(true);
+  const handleEditorClose = () => setIsEditorVisible(false);
+
   if (loading) {
-    return (
-      <div className="mt-4">
-        <h3 className="text-lg font-bold text-white mb-2">
-          Loading presets...
-        </h3>
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    );
+    return <p className="text-gray-400">Loading presets...</p>;
   }
 
   if (!selectedPreset) {
     return (
       <div className="mt-4">
         <h3 className="text-lg font-bold text-white mb-4">Starred Presets</h3>
-        <div className="flex flex-row gap-2">
-          {starredPresets.map((preset) => (
+        {starredPresets.length === 0 ? (
+          <p className="text-gray-400">No starred presets found.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {starredPresets.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => selectPreset(preset)}
+                className="block bg-blue-600 text-white rounded-md px-4 py-4 hover:bg-blue-700"
+              >
+                {preset.name}
+              </button>
+            ))}
             <button
-              key={preset.id}
-              onClick={() => selectPreset(preset)}
-              className="block bg-blue-600 text-white rounded-md px-4 py-2 hover:bg-blue-700"
+              onClick={handleEditorOpen}
+              className="bg-gray-600 text-white rounded-md hover:bg-gray-700 p-4 w-full"
             >
-              {preset.name}
+              Add a Preset +
             </button>
-          ))}
-        </div>
+            {isEditorVisible && (
+              <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <PresetEditor closeEditor={handleEditorClose} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -122,7 +125,7 @@ const ExerciseList: React.FC = () => {
         <button
           onClick={() => {
             setSelectedPreset(null);
-            localStorage.removeItem("selectedPreset"); // Clear local storage when deselecting
+            localStorage.removeItem("selectedPreset");
           }}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
         >
