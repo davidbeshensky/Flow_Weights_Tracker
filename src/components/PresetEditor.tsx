@@ -112,7 +112,7 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
             onChange={(e) =>
               setNewPreset({ ...newPreset, name: e.target.value })
             }
-            className="placeholder-gray border p-2 rounded w-full mb-2"
+            className="placeholder-gray bg-gray-800 border border-gray-700 p-2 rounded w-full mb-2"
           />
           <textarea
             placeholder="Description (optional)"
@@ -120,7 +120,7 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
             onChange={(e) =>
               setNewPreset({ ...newPreset, description: e.target.value })
             }
-            className="border p-2 rounded w-full mb-2"
+            className="border border-gray-700 p-2 bg-gray-800 rounded w-full mb-2"
           />
 
           {/* Exercise Search Bar */}
