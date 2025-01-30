@@ -183,7 +183,7 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
                     }`}
                   >
                     {preset.starred ? "Unstar" : "Star"}
-                  </button>w
+                  </button>
                 </li>
               ))}
             </ul>

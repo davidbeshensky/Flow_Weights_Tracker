@@ -7,6 +7,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SignOutButton from "./SignOutButton";
 import DashboardButton from "./DashboardButton";
 import PresetEditor from "./PresetEditor"; // Import the PresetEditor component
+import BuyMeACoffee from "./BuyMeACoffee";
 
 // Define the MUI theme
 const theme = createTheme({
@@ -49,6 +50,7 @@ const theme = createTheme({
 const MenuWithCustomStyles: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditorVisible, setIsEditorVisible] = useState(false); // Track PresetEditor visibility
+  const [isCoffeeOpen, setIsCoffeeOpen] = useState(false);
   const open = Boolean(anchorEl);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -68,6 +70,11 @@ const MenuWithCustomStyles: React.FC = () => {
     setIsEditorVisible(false);
   };
 
+  const toggleCoffeeMenu = () => {
+    setIsCoffeeOpen((prev) => !prev);
+    handleMenuClose();
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className="bg-gray-700 rounded-md">
@@ -84,31 +91,37 @@ const MenuWithCustomStyles: React.FC = () => {
           anchorEl={anchorEl}
           open={open}
           onClose={handleMenuClose}
-          transformOrigin={{
-            vertical: "top",
-            horizontal: "right",
-          }}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
-          }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <MenuItem className="flex flex-col gap-2">
+          <MenuItem>
             <DashboardButton />
+          </MenuItem>
+          <MenuItem>
             <button
               onClick={handleEditorOpen}
-              className="text-left bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
+              className="bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
             >
               Workout Editor
             </button>
+          </MenuItem>
+          <MenuItem>
+          <button
+              onClick={toggleCoffeeMenu} // Toggles the BuyMeACoffee menu
+            
+              className="bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
+            >
+              ☕ coffee?
+            </button>
+          </MenuItem>
+          <MenuItem>
             <SignOutButton />
           </MenuItem>
         </Menu>
 
         {/* PresetEditor Overlay */}
-        {isEditorVisible && (
-          <PresetEditor closeEditor={handleEditorClose} />
-        )}
+        {isEditorVisible && <PresetEditor closeEditor={handleEditorClose} />}
+        {isCoffeeOpen && <BuyMeACoffee toggleMenu={toggleCoffeeMenu} />}
       </div>
     </ThemeProvider>
   );

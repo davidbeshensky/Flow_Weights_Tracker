@@ -5,7 +5,6 @@ import React from "react";
 import HamburgerMenu from "./HamburgerMenu";
 import ExerciseSearchBar from "./ExerciseSearchBar";
 import LastWeekExerciseList from "./LastWeeksExerciseList";
-import BuyMeACoffee from "./BuyMeACoffee";
 
 const ExerciseManager: React.FC = () => {
   return (
@@ -20,7 +19,6 @@ const ExerciseManager: React.FC = () => {
             1% Better Every Day.
           </h2>
           <div className="flex flex-row gap-2 relative">
-            <BuyMeACoffee />
             <HamburgerMenu />
           </div>
         </div>
