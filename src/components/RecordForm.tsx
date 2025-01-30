@@ -26,7 +26,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   const [isEditingName, setIsEditingName] = useState<boolean>(false); // Tracks if EditExerciseName is active
   const [reps, setReps] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
-  const [sets, setSets] = useState<{ reps: number; weight: number, restTime: number }[]>([]);
+  const [sets, setSets] = useState<
+    { reps: number; weight: number; restTime: number }[]
+  >([]);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -55,14 +57,36 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
   };
 
   useEffect(() => {
-    // Start the timer on component mount
+    // Load the stored timer state
+    const storedTime = localStorage.getItem(`${exerciseId}_timer`);
+    const storedTimestamp = localStorage.getItem(`${exerciseId}_timestamp`);
+
+    if (storedTime && storedTimestamp) {
+      const savedTime = parseInt(storedTime, 10);
+      const savedTimestamp = parseInt(storedTimestamp, 10);
+      const timeDifference = Math.floor((Date.now() - savedTimestamp) / 1000);
+
+      // Resume from where it left off
+      setTimeElapsed(savedTime + timeDifference);
+    }
+
     setTimerActive(true);
+  }, [exerciseId]);
+
+  useEffect(() => {
+    if (!timerActive) return;
+
     const interval = setInterval(() => {
-      if (timerActive) setTimeElapsed((prev) => prev + 1);
+      setTimeElapsed((prev) => {
+        const newTime = prev + 1;
+        localStorage.setItem(`${exerciseId}_timer`, newTime.toString());
+        localStorage.setItem(`${exerciseId}_timestamp`, Date.now().toString());
+        return newTime;
+      });
     }, 1000);
 
-    return () => clearInterval(interval); // Cleanup on component unmount
-  }, [timerActive]);
+    return () => clearInterval(interval);
+  }, [timerActive, exerciseId]);
 
   useEffect(() => {
     const fetchAndLoadData = async () => {
@@ -141,21 +165,21 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       setError("Both reps and weight are required to add a set.");
       return;
     }
-  
+
     // Add the current set to the sets array with the rest time included
     setSets((prev) => [...prev, { reps, weight, restTime: timeElapsed }]);
-  
+
     // For the next set, default to the current set's values
     setReps(reps);
     setWeight(weight);
-  
+
     // Reset the timer for the next set
     setTimeElapsed(0);
     setTimerActive(true);
-  
+
     setError(null);
   };
-  
+
   // Submit the current workout
   const handleSubmit = async () => {
     console.log("handleSubmit invoked");
@@ -182,7 +206,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       }
 
       console.log("Record ID created:", recordId);
-      console.log("sets",sets);
+      console.log("sets", sets);
       // Step 2: Add sets to the exercise_set_records table
       const setsRes = await fetch(`/api/records/${recordId}/sets`, {
         method: "POST",
@@ -308,7 +332,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       <div className="flex flex-inline">
         <button
           onClick={handleOpenHistory}
-          className="w-full py-3 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-4"
+          className="w-full py-3 bg-gray-600 border-gray-800 text-white font-medium rounded-md shadow-md hover:bg-gray-500 mb-4"
         >
           View History
         </button>
@@ -326,7 +350,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         </AnimatePresence>
         <button
           onClick={() => setShowAddInfoModal(true)}
-          className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-700 mb-4"
+          className="w-full py-3 ml-2 bg-gray-600 text-white font-medium rounded-md shadow-md hover:bg-gray-500 mb-4"
         >
           Add Information
         </button>
@@ -340,8 +364,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
       </div>
       <div className="border-solid border-t-2 border-gray-800 mb-2 w-full"></div>
       {/* Timer Display */}
-      <div className="text-lg justify-center flex font-medium mb-4">
+      <div className="text-lg justify-center flex font-medium mb-4 gap-2">
         <span className="text-white">{formatTime(timeElapsed)}</span>
+        <button
+          className="border-gray-800 border-2 rounded-md px-1 hover:bg-gray-500"
+          onClick={() => setTimerActive((prev) => !prev)}
+        >
+          {timerActive ? "Pause" : "Resume"}
+        </button>
       </div>
       <div className="flex flex-row gap-2">
         {/* Reps Input */}
@@ -359,7 +389,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
             id="reps"
             value={reps || ""}
             onChange={(e) => setReps(Number(e.target.value))}
-            className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
+            className="mt-1 block w-full p-3 bg-gray-900 border-gray-800 border-2 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
             placeholder="Enter reps"
           />
         </div>
@@ -378,14 +408,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
             id="weight"
             value={weight || ""}
             onChange={(e) => setWeight(Number(e.target.value))}
-            className="mt-1 block p-3 w-full bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
+            className="mt-1 block p-3 w-full bg-gray-900 border-gray-800 border-2 text-white rounded-md focus:ring-2 focus:ring-blue-600 appearance-none h-12"
             placeholder="Enter weight"
           />
         </div>
         {/* Add Set Button */}
         <button
           onClick={handleAddSet}
-          className="bg-blue-600 mt-6 text-white font-medium rounded-md shadow-md hover:bg-blue-700 transition-all mb-4 h-12 px-4 flex items-center justify-center"
+          className="bg-blue-600 border-gray-800 mt-6 text-white font-medium rounded-md shadow-md hover:bg-blue-500 transition-all mb-4 h-12 px-4 flex items-center justify-center"
         >
           Add Set
         </button>
@@ -405,7 +435,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                   })
                 : "Unknown Date"}
             </h4>
-            <ul className="rounded-md bg-gray-800">
+            <ul className="rounded-md bg-gray-900 border-gray-800 border-2">
               {recentSets.map((set, index) => (
                 <li key={index} className="p-1">
                   <div className="text-sm font-medium text-gray-400">
@@ -431,7 +461,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
                 {isEditingSets ? <CheckIcon /> : <EditIcon fontSize="medium" />}
               </button>
             </div>
-            <ul className="bg-gray-800 rounded-md">
+            <ul className="bg-gray-900 border-gray-800 border-2 rounded-md">
               {sets.map((set, index) => (
                 <li key={index} className="p-1">
                   {isEditingSets ? (
@@ -519,7 +549,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="mt-1 block w-full p-3 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 resize-none"
+          className="mt-1 block w-full p-3 bg-gray-900 border-2 border-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-600 resize-none"
           placeholder="Add any notes for this workout"
         />
       </div>
@@ -533,7 +563,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
         </button>
         <button
           onClick={handleSubmit}
-          className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-500"
         >
           Lock-In
         </button>
