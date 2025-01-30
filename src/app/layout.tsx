@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { WorkoutProvider } from "@/components/WorkoutContext";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Speed } from "@mui/icons-material";
 
 export const metadata: Metadata = {
   title: "Locked-In-Gains",
@@ -75,6 +77,7 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
       <body className="main-container">
+        <SpeedInsights />
         <WorkoutProvider>{children}</WorkoutProvider>
       </body>
     </html>
