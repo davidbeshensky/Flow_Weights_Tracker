@@ -99,7 +99,7 @@ const MenuWithCustomStyles: React.FC = () => {
               onClick={handleEditorOpen}
               className="text-left bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
             >
-              Preset Editor
+              Workout Editor
             </button>
             <SignOutButton />
           </MenuItem>

@@ -103,7 +103,7 @@ const ExerciseList: React.FC = () => {
               onClick={handleEditorOpen}
               className="bg-gray-600 text-white rounded-md hover:bg-gray-700 p-4 w-full"
             >
-              Add a Preset +
+              Add a Workout +
             </button>
             {isEditorVisible && (
               <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">

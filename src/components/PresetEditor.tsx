@@ -100,11 +100,11 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
           Close
         </button>
 
-        <h1 className="text-2xl font-bold mb-4">Preset Editor</h1>
+        <h1 className="text-2xl font-bold mb-4">Workout Editor</h1>
 
         {/* New Preset Form */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Create New Preset</h2>
+          <h2 className="text-xl font-semibold mb-2">Create New Workout</h2>
           <input
             type="text"
             placeholder="Preset Name"
@@ -160,7 +160,7 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
 
         {/* Presets List */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Your Presets</h2>
+          <h2 className="text-xl font-semibold mb-4">Your Workouts</h2>
           {isLoading ? (
             <p>Loading...</p>
           ) : (
@@ -183,7 +183,7 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
                     }`}
                   >
                     {preset.starred ? "Unstar" : "Star"}
-                  </button>
+                  </button>w
                 </li>
               ))}
             </ul>
