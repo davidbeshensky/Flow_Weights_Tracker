@@ -79,15 +79,28 @@ const ExerciseList: React.FC = () => {
   const handleEditorClose = () => setIsEditorVisible(false);
 
   if (loading) {
-    return <p className="text-gray-400">Loading presets...</p>;
+    return <p className="text-gray-400">Loading Workouts...</p>;
   }
 
   if (!selectedPreset) {
     return (
       <div className="mt-4">
-        <h3 className="text-lg font-bold text-white mb-4">Starred Presets</h3>
+        <h3 className="text-lg font-bold text-white mb-4">Starred Workouts</h3>
         {starredPresets.length === 0 ? (
-          <p className="text-gray-400">No starred presets found.</p>
+          <>
+            <p className="text-gray-400">No starred Workouts found.</p>
+              <button
+                onClick={handleEditorOpen}
+                className="bg-gray-600 text-white rounded-md hover:bg-gray-700 p-4 w-full"
+              >
+                Add a Workout +
+              </button>
+              {isEditorVisible && (
+                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <PresetEditor closeEditor={handleEditorClose} />
+                </div>
+              )}
+          </>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {starredPresets.map((preset) => (
@@ -129,7 +142,7 @@ const ExerciseList: React.FC = () => {
           }}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
         >
-          Back to Presets
+          Back to Workouts
         </button>
       </div>
       <ul className="space-y-1">

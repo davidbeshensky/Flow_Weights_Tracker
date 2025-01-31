@@ -84,7 +84,9 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
   }, []);
 
   const handleAddExercise = (exercise: Exercise) => {
-    if (!selectedExercises.some((e) => e.exercise_id === exercise.exercise_id)) {
+    if (
+      !selectedExercises.some((e) => e.exercise_id === exercise.exercise_id)
+    ) {
       setSelectedExercises((prev) => [...prev, exercise]);
     }
   };
@@ -138,7 +140,9 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
                   <button
                     onClick={() =>
                       setSelectedExercises((prev) =>
-                        prev.filter((e) => e.exercise_id !== exercise.exercise_id)
+                        prev.filter(
+                          (e) => e.exercise_id !== exercise.exercise_id
+                        )
                       )
                     }
                     className="text-red-500 hover:underline"
@@ -154,39 +158,43 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
             onClick={createPreset}
             className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Add Preset
+            Add Workout
           </button>
         </div>
 
         {/* Presets List */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Your Workouts</h2>
           {isLoading ? (
             <p>Loading...</p>
           ) : (
-            <ul className="space-y-4">
-              {presets.map((preset) => (
-                <li
-                  key={preset.id}
-                  className="bg-gray-700 p-4 rounded shadow flex justify-between items-center"
-                >
-                  <div>
-                    <h3 className="text-lg font-bold">{preset.name}</h3>
-                    <p className="text-gray-400">{preset.description || "-"}</p>
-                  </div>
-                  <button
-                    onClick={() => toggleStarred(preset.id, preset.starred)}
-                    className={`px-4 py-2 rounded ${
-                      preset.starred
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-600 text-white"
-                    }`}
+            <>
+              <h2 className="text-xl font-semibold mb-4">Your Workouts</h2>
+              <ul className="space-y-4">
+                {presets.map((preset) => (
+                  <li
+                    key={preset.id}
+                    className="bg-gray-700 p-4 rounded shadow flex justify-between items-center"
                   >
-                    {preset.starred ? "Unstar" : "Star"}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <div>
+                      <h3 className="text-lg font-bold">{preset.name}</h3>
+                      <p className="text-gray-400">
+                        {preset.description || "-"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => toggleStarred(preset.id, preset.starred)}
+                      className={`px-4 py-2 rounded ${
+                        preset.starred
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-600 text-white"
+                      }`}
+                    >
+                      {preset.starred ? "Unstar" : "Star"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>
