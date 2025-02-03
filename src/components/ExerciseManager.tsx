@@ -5,6 +5,7 @@ import React from "react";
 import HamburgerMenu from "./HamburgerMenu";
 import ExerciseSearchBar from "./ExerciseSearchBar";
 import LastWeekExerciseList from "./LastWeeksExerciseList";
+import UserExerciseList from "./UserExerciseList";
 
 const ExerciseManager: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const ExerciseManager: React.FC = () => {
           </div>
         </div>
         <ExerciseSearchBar />
+        <UserExerciseList />
         <LastWeekExerciseList />
       </div>
     </div>

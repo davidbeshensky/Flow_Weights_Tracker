@@ -164,11 +164,11 @@ export default function PresetEditor({ closeEditor }: PresetEditorProps) {
 
         {/* Presets List */}
         <div>
+          <h2 className="text-xl font-semibold mb-4">Your Workouts</h2>
           {isLoading ? (
             <p>Loading...</p>
           ) : (
             <>
-              <h2 className="text-xl font-semibold mb-4">Your Workouts</h2>
               <ul className="space-y-4">
                 {presets.map((preset) => (
                   <li
