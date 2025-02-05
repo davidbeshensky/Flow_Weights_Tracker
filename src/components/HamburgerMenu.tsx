@@ -100,7 +100,7 @@ const MenuWithCustomStyles: React.FC = () => {
           <MenuItem>
             <button
               onClick={handleEditorOpen}
-              className="bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
+              className="bg-gray-600 text-md text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
             >
               Workout Editor
             </button>
@@ -109,7 +109,7 @@ const MenuWithCustomStyles: React.FC = () => {
           <button
               onClick={toggleCoffeeMenu} // Toggles the BuyMeACoffee menu
             
-              className="bg-gray-600 text-white rounded-md hover:bg-gray-700 px-4 py-2 w-full"
+              className="bg-gray-600 text-white text-md rounded-md hover:bg-gray-700 px-4 py-2 w-full"
             >
               ☕ coffee?
             </button>

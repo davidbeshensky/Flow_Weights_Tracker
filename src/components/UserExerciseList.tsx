@@ -10,12 +10,15 @@ interface Exercise {
 const UserExerciseList: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("isExerciseListMinimized") === "true";
+      setIsMinimized(
+        localStorage.getItem("isExerciseListMinimized") === "true"
+      );
     }
-    return false;
-  });
+  }, []);
 
   const fetchUserExercises = useCallback(async () => {
     setLoading(true);
