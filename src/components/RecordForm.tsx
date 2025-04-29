@@ -265,6 +265,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ exerciseId }) => {
     setReps(null);
     setWeight(null);
     setNotes("");
+    setTimeElapsed(0);
     setError(null);
     router.push("/");
   };

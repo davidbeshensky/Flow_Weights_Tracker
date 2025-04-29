@@ -2,7 +2,6 @@ import { supabaseServer } from "@/lib/supabaseServer";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  // Instead of passing `req, res` or NextResponse, we just pass { cookies }
   const supabase = await supabaseServer();
 
   try {

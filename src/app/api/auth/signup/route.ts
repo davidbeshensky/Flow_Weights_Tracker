@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Initialize Supabase with public credentials
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Public client for authentication
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(req: NextRequest) {

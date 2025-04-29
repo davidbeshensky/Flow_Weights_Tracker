@@ -7,13 +7,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter(); // Initialize router
+  const router = useRouter(); 
 
   async function handleLogin() {
     setError(null);
 
     try {
-      // Make a request to our new /api/login route
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
